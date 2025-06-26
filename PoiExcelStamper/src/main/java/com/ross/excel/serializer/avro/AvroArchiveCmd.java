@@ -1,11 +1,12 @@
-package com.ross.excel.serializer.mapper;
+package com.ross.excel.serializer.avro;
 
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
 
 import java.util.List;
 
-import com.ross.excel.serializer.mapper.ArchiveNameResolver.ArchiveSchedule;
+import com.ross.excel.serializer.archiver.ArchiveNameResolver;
+import com.ross.excel.serializer.archiver.ArchiveNameResolver.ArchiveSchedule;
 
 public class AvroArchiveCmd {
 

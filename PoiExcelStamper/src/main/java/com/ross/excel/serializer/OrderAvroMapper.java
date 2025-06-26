@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
 
-import com.ross.excel.serializer.mapper.AvroDataMapper;
+import com.ross.excel.serializer.avro.AvroDataMapper;
 
 public class OrderAvroMapper implements AvroDataMapper {
 

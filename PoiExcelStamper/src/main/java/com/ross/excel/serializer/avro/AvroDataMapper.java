@@ -1,4 +1,4 @@
-package com.ross.excel.serializer.mapper;
+package com.ross.excel.serializer.avro;
 
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
