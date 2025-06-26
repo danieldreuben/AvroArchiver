@@ -7,7 +7,7 @@
 	],
 	"settings": {
 		"java.compile.nullAnalysis.mode": "disabled",
-		"maven.view": "flat",
+		"maven.view": "hierarchical",
 		"java.configuration.updateBuildConfiguration": "automatic",
 		"java.debug.settings.onBuildFailureProceed": true,
 		"java.debug.settings.showQualifiedNames": true

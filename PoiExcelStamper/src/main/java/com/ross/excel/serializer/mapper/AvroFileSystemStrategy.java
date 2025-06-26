@@ -12,13 +12,13 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
 
-public class FileSystemAvroStrategy implements ArchiverStrategy {
+public class AvroFileSystemStrategy implements ArchiverStrategy {
 
     private String baseDir = null;
 	private AvroArchiveCmd archiveCommand;
 	private String avroArchiveFilename; 
 
-    public FileSystemAvroStrategy(AvroArchiveCmd cmd) {
+    public AvroFileSystemStrategy(AvroArchiveCmd cmd) {
 
 		this.archiveCommand = cmd;		
         /**this.baseDir = archiveCommand.getBaseDir() != null ? 

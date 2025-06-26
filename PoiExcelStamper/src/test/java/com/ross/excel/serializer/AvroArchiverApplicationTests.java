@@ -3,7 +3,7 @@ package com.ross.excel.serializer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.ross.excel.serializer.mapper.FileSystemAvroStrategy;
+import com.ross.excel.serializer.mapper.AvroFileSystemStrategy;
 
 import org.apache.avro.specific.SpecificRecord;
 
@@ -31,7 +31,7 @@ class AvroApplicationArchiverTests {
 	@Test 
 	void testArchiveOrders() {
         try {
-            new FileSystemAvroStrategy(
+            new AvroFileSystemStrategy (
                 new OrderArchiveCmd()
             ).archive();
         } catch (Exception e) {
@@ -42,7 +42,7 @@ class AvroApplicationArchiverTests {
     @Test 
 	void testReadArchivedOrders() {
         try {
-            List<SpecificRecord> orders = new FileSystemAvroStrategy(
+            List<SpecificRecord> orders = new AvroFileSystemStrategy(
                 new OrderArchiveCmd()
             ).read();
 
