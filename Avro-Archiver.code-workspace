@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"name": "PoiExcelStamper",
+			"path": "PoiExcelStamper"
+		}
+	],
+	"settings": {
+		"java.compile.nullAnalysis.mode": "disabled",
+		"maven.view": "flat",
+		"java.configuration.updateBuildConfiguration": "automatic",
+		"java.debug.settings.onBuildFailureProceed": true,
+		"java.debug.settings.showQualifiedNames": true
+	}
+}
