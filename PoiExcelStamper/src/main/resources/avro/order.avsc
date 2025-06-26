@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "OrderAvro",
+  "namespace": "com.ross.excel.serializer",
+  "fields": [
+    { "name": "orderId", "type": "string" },
+    {
+      "name": "items",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "ItemAvro",
+          "fields": [
+            { "name": "sku", "type": "string" },
+            { "name": "quantity", "type": "int" },
+            { "name": "price", "type": "double" }
+          ]
+        }
+      }
+    }
+  ]
+}
+
