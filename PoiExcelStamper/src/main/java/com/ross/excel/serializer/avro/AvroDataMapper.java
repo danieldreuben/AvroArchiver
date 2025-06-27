@@ -21,6 +21,6 @@ public interface AvroDataMapper<T extends SpecificRecord> extends DataMapper<T> 
     //<T extends SpecificRecord> getRcords();
     //List<T> getRecords();
     //@Override
-    //void setRecordsFromArchive(List<T> t); 
+    void setRecordsFromArchive(List<SpecificRecord> t); 
     
 }

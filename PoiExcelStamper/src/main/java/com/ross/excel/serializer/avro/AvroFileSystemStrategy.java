@@ -55,15 +55,13 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> implements Archive
 					writer.append(record);
 				}
 			}
-			/*for (SpecificRecord record : archiveCommand.getRecords()) {
-				writer.append(record);
-			}*/
+
 			writer.flush();
 		}
 	}
 
 	@Override
-    public List<SpecificRecord> deserialize() throws IOException {
+    public void deserialize() throws IOException {
         List<SpecificRecord> records = new ArrayList<>();
 		File avroFile = new File(baseDir, avroArchiveFilename);
 		SpecificDatumReader<? extends SpecificRecord> reader = 
@@ -72,12 +70,15 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> implements Archive
 
 		try (DataFileReader<? extends SpecificRecord> dataFileReader = 
 			new DataFileReader<>(avroFile, reader)) {
+
             while (dataFileReader.hasNext()) {
                 SpecificRecord record = dataFileReader.next();
                 records.add(record);
+				if (records.size() == archiveCommand.getReadBatchSize()) {
+					archiveCommand.setRecords(records);
+					records.clear();
+				}
             }
         }
-		//archiveCommand.setRecords(records);
-        return records;
     }
 }

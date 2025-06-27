@@ -23,14 +23,26 @@ public class OrderAvroMapper implements AvroDataMapper<OrderAvro>  {
     }
 
     @Override
+    public void setRecordsFromArchive(List<SpecificRecord> t) {
+
+        List<OrderAvro> orderList = t.stream()
+            .filter(OrderAvro.class::isInstance)
+            .map(OrderAvro.class::cast)
+            .collect(Collectors.toList());
+
+        orderList.stream().forEach(System.out::println);
+    }
+
+    @Override
     public List<OrderAvro> getRecordsToArchive() {
 
         int randomorderbatch = new Random().nextInt(5) + 1;
         
-        return ++callCount < maxOrders ? getAvroSchemaRecords(randomorderbatch) : new ArrayList<>();
+        return ++callCount < maxOrders ? getSerializeOrders(randomorderbatch) : new ArrayList<>();
     }
 
-    private List<OrderAvro> getAvroSchemaRecords(int num) {
+
+    private List<OrderAvro> getSerializeOrders(int num) {
             
         List<OrderAvro> records = new ArrayList<>();
 
@@ -70,14 +82,6 @@ public class OrderAvroMapper implements AvroDataMapper<OrderAvro>  {
         }
 
         return records;
-    }
-
-    @Override
-    public void setRecordsFromArchive(List<OrderAvro> t) {
-
-        List<OrderAvro> orderList;
-
-        throw new UnsupportedOperationException("Unimplemented method 'setRecordsFromArchive'");
     }
 }
 

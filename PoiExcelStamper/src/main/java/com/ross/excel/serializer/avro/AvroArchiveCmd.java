@@ -14,6 +14,8 @@ public class AvroArchiveCmd<T extends SpecificRecord> {
     private final String jobName;
     private ArchiveNameResolver.ArchiveSchedule schedule;
     private String baseDir;
+    private int readBatchSize=10; 
+    private int writeBatchSize=10;
 
     public AvroArchiveCmd(AvroDataMapper<T> mapper, String jobName, String baseDir, 
     ArchiveSchedule schedule) {
@@ -31,6 +33,21 @@ public class AvroArchiveCmd<T extends SpecificRecord> {
         return jobName;
     }
 
+    public int getReadBatchSize() {
+        return readBatchSize;
+    }
+    
+    public int getWriteBatchSize() {
+        return writeBatchSize;
+    }  
+
+   public void setReadBatchSize(int t) {
+        this.readBatchSize = t;
+    }
+    public void setWriteBatchSize(int t) {
+        this.writeBatchSize = t;
+    }
+
     public ArchiveNameResolver.ArchiveSchedule getArchiveSchedule() {
         return schedule;
     }   
@@ -43,7 +60,7 @@ public class AvroArchiveCmd<T extends SpecificRecord> {
         return avroMapper.getRecordsToArchive();
     }    
 
-    public void setRecords (List<T> records) {
+    public void setRecords (List<SpecificRecord> records) {
         avroMapper.setRecordsFromArchive (records);
     }
 }
