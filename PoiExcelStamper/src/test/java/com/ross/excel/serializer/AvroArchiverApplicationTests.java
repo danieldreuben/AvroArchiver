@@ -29,11 +29,11 @@ class AvroApplicationArchiverTests {
 	}
     
 	@Test 
-	void testArchiveOrders() {
+	void testWriteArchiveOrders() {
         try {
-            new AvroFileSystemStrategy (
-                new OrderArchiveCmd()
-            ).archive();
+            new AvroFileSystemStrategy<OrderAvro> (
+                new OrderArchiveCmd<OrderAvro>()
+            ).serialize();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -42,9 +42,9 @@ class AvroApplicationArchiverTests {
     @Test 
 	void testReadArchivedOrders() {
         try {
-            List<SpecificRecord> orders = new AvroFileSystemStrategy(
-                new OrderArchiveCmd()
-            ).read();
+            List<SpecificRecord> orders = new AvroFileSystemStrategy<OrderAvro>(
+                new OrderArchiveCmd<OrderAvro>()
+            ).deserialize();
 
             orders.stream().forEach(System.out::println);
 

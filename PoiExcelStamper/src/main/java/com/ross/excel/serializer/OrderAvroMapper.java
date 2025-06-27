@@ -2,6 +2,7 @@ package com.ross.excel.serializer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import org.apache.avro.Schema;
@@ -9,7 +10,9 @@ import org.apache.avro.specific.SpecificRecord;
 
 import com.ross.excel.serializer.avro.AvroDataMapper;
 
-public class OrderAvroMapper implements AvroDataMapper {
+public class OrderAvroMapper implements AvroDataMapper<OrderAvro>  {
+    private int callCount = 0;
+    private final int maxOrders = 5;
 
     public OrderAvroMapper() {
     }
@@ -20,16 +23,32 @@ public class OrderAvroMapper implements AvroDataMapper {
     }
 
     @Override
-    public List<SpecificRecord> getRecords() {
-        List<SpecificRecord> records = new ArrayList<>();
+    public List<OrderAvro> getRecordsToArchive() {
 
-        for (int i = 1; i <= 5; i++) {
-            String orderId = "ORDER-" + String.format("%03d", i);
+        int randomorderbatch = new Random().nextInt(5) + 1;
+        
+        return ++callCount < maxOrders ? getAvroSchemaRecords(randomorderbatch) : new ArrayList<>();
+    }
 
-            List<Item> items = List.of(
-                new Item("SKU-" + i + "-A", i % 5 + 1, 10.0 + i),
-                new Item("SKU-" + i + "-B", i % 3 + 1, 5.5 + i)
-            );
+    private List<OrderAvro> getAvroSchemaRecords(int num) {
+            
+        List<OrderAvro> records = new ArrayList<>();
+
+        for (int i = 0; i <= num; i++) {
+            
+            int randomordernum = new Random().nextInt(10000) + 1;
+            String orderId = "ORDER-" + String.format("%03d", randomordernum);
+
+            List<Item> items = new ArrayList<Item>();
+            int randomsku = new Random().nextInt(10000) + 1;
+            int randomnumofitems = new Random().nextInt(5) + 1;
+
+            for (int t = 0; t < randomnumofitems; t++) {
+                int randomprice = new Random().nextInt(10000) + 1;
+                int randomquantity = new Random().nextInt(10000) + 1;
+
+                items.add(new Item("SKU-" + randomsku + "-A", randomquantity + 1, randomprice + 10));
+            }
 
             // Convert to Avro item list
             List<ItemAvro> itemAvros = items.stream()
@@ -49,7 +68,16 @@ public class OrderAvroMapper implements AvroDataMapper {
 
             records.add(orderAvro);
         }
+
         return records;
+    }
+
+    @Override
+    public void setRecordsFromArchive(List<OrderAvro> t) {
+
+        List<OrderAvro> orderList;
+
+        throw new UnsupportedOperationException("Unimplemented method 'setRecordsFromArchive'");
     }
 }
 

@@ -15,13 +15,13 @@ import org.apache.avro.specific.SpecificRecord;
 import com.ross.excel.serializer.archiver.ArchiverStrategy;
 import com.ross.excel.serializer.archiver.ArchiveNameResolver;
 
-public class AvroFileSystemStrategy implements ArchiverStrategy {
+public class AvroFileSystemStrategy<T extends SpecificRecord> implements ArchiverStrategy {
 
     private String baseDir = null;
-	private AvroArchiveCmd archiveCommand;
+	private AvroArchiveCmd<T> archiveCommand;
 	private String avroArchiveFilename; 
 
-    public AvroFileSystemStrategy(AvroArchiveCmd cmd) {
+    public AvroFileSystemStrategy(AvroArchiveCmd<T> cmd) {
 
 		this.archiveCommand = cmd;		
         /**this.baseDir = archiveCommand.getBaseDir() != null ? 
@@ -32,7 +32,7 @@ public class AvroFileSystemStrategy implements ArchiverStrategy {
     } 
 
     @Override
-    public void archive() throws IOException {
+    public void serialize() throws IOException {
 		File outFile = new File(baseDir, avroArchiveFilename);
 		outFile.getParentFile().mkdirs();
 		boolean append = outFile.exists();
@@ -49,15 +49,21 @@ public class AvroFileSystemStrategy implements ArchiverStrategy {
 						writer.appendTo(outFile);
 				}
 			}
-			for (SpecificRecord record : archiveCommand.getRecords()) {
-				writer.append(record);
+			List<T> records; 
+			while (!(records = archiveCommand.getRecords()).isEmpty()) {
+				for (SpecificRecord record : records) {
+					writer.append(record);
+				}
 			}
+			/*for (SpecificRecord record : archiveCommand.getRecords()) {
+				writer.append(record);
+			}*/
 			writer.flush();
 		}
 	}
 
 	@Override
-    public List<SpecificRecord> read() throws IOException {
+    public List<SpecificRecord> deserialize() throws IOException {
         List<SpecificRecord> records = new ArrayList<>();
 		File avroFile = new File(baseDir, avroArchiveFilename);
 		SpecificDatumReader<? extends SpecificRecord> reader = 
@@ -71,6 +77,7 @@ public class AvroFileSystemStrategy implements ArchiverStrategy {
                 records.add(record);
             }
         }
+		//archiveCommand.setRecords(records);
         return records;
     }
 }

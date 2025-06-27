@@ -8,14 +8,14 @@ import java.util.List;
 import com.ross.excel.serializer.archiver.ArchiveNameResolver;
 import com.ross.excel.serializer.archiver.ArchiveNameResolver.ArchiveSchedule;
 
-public class AvroArchiveCmd {
+public class AvroArchiveCmd<T extends SpecificRecord> {
 
-    private final AvroDataMapper avroMapper;
+    private final AvroDataMapper<T> avroMapper;
     private final String jobName;
     private ArchiveNameResolver.ArchiveSchedule schedule;
     private String baseDir;
 
-    public AvroArchiveCmd(AvroDataMapper mapper, String jobName, String baseDir, 
+    public AvroArchiveCmd(AvroDataMapper<T> mapper, String jobName, String baseDir, 
     ArchiveSchedule schedule) {
         this.avroMapper = mapper;
         this.jobName = jobName;
@@ -39,7 +39,11 @@ public class AvroArchiveCmd {
         return baseDir;
     }
 
-    public List<SpecificRecord> getRecords() {
-        return avroMapper.getRecords();
+    public List<T> getRecords() {
+        return avroMapper.getRecordsToArchive();
     }    
+
+    public void setRecords (List<T> records) {
+        avroMapper.setRecordsFromArchive (records);
+    }
 }
