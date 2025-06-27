@@ -42,11 +42,11 @@ class AvroApplicationArchiverTests {
     @Test 
 	void testReadArchivedOrders() {
         try {
-            List<SpecificRecord> orders = new AvroFileSystemStrategy<OrderAvro>(
+            new AvroFileSystemStrategy<OrderAvro>(
                 new OrderArchiveCmd<OrderAvro>()
             ).deserialize();
 
-            orders.stream().forEach(System.out::println);
+            //orders.stream().forEach(System.out::println);
 
         } catch (Exception e) {
             e.printStackTrace();
