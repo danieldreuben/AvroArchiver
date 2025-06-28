@@ -1,28 +1,29 @@
 package com.ross.excel.serializer;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
 
-import com.ross.excel.serializer.avro.AvroDataMapper;
 
-public class OrderAvroMapper implements AvroDataMapper<OrderAvro>  {
+//public class OrderAvroMapper implements AvroDataMapper<OrderAvro>  {
+public class OrderHelper {
     private int callCount = 0;
     private final int maxOrders = 5;
 
-    public OrderAvroMapper() {
+    public OrderHelper() {
     }
 
-    @Override
+    /*@Override
     public Schema getSchema() {
         return OrderAvro.getClassSchema();
-    }
+    }*/
 
-    @Override
+    //@Override
     public void setRecordsFromArchive(List<SpecificRecord> t) {
 
         List<OrderAvro> orderList = t.stream()
@@ -33,9 +34,8 @@ public class OrderAvroMapper implements AvroDataMapper<OrderAvro>  {
         orderList.stream().forEach(System.out::println);
     }
 
-    @Override
+    //@Override
     public List<OrderAvro> getRecordsToArchive() {
-
         int randomorderbatch = new Random().nextInt(5) + 1;
         
         return ++callCount < maxOrders ? getSerializeOrders(randomorderbatch) : new ArrayList<>();
@@ -50,6 +50,13 @@ public class OrderAvroMapper implements AvroDataMapper<OrderAvro>  {
             
             int randomordernum = new Random().nextInt(10000) + 1;
             String orderId = "ORDER-" + String.format("%03d", randomordernum);
+            double shipping = new Random().nextInt(5000);
+            
+            byte[] imageBytes;
+            try { 
+                File imageFile = new File("test.png");
+                imageBytes = Files.readAllBytes(imageFile.toPath());            
+            } catch (Exception e) { e.printStackTrace();}
 
             List<Item> items = new ArrayList<Item>();
             int randomsku = new Random().nextInt(10000) + 1;
@@ -75,6 +82,7 @@ public class OrderAvroMapper implements AvroDataMapper<OrderAvro>  {
             // Build the Avro order
             OrderAvro orderAvro = OrderAvro.newBuilder()
                 .setOrderId(orderId)
+                .setShipping(shipping)
                 .setItems(itemAvros)
                 .build();
 
@@ -83,5 +91,6 @@ public class OrderAvroMapper implements AvroDataMapper<OrderAvro>  {
 
         return records;
     }
+
 }
 

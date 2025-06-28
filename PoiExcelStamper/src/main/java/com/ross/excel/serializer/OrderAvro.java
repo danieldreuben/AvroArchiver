@@ -14,10 +14,10 @@ import org.apache.avro.message.SchemaStore;
 
 @org.apache.avro.specific.AvroGenerated
 public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = 8513882015135295162L;
+  private static final long serialVersionUID = 8281112172163851611L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OrderAvro\",\"namespace\":\"com.ross.excel.serializer\",\"fields\":[{\"name\":\"orderId\",\"type\":\"string\"},{\"name\":\"items\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"ItemAvro\",\"fields\":[{\"name\":\"sku\",\"type\":\"string\"},{\"name\":\"quantity\",\"type\":\"int\"},{\"name\":\"price\",\"type\":\"double\"}]}}}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OrderAvro\",\"namespace\":\"com.ross.excel.serializer\",\"fields\":[{\"name\":\"orderId\",\"type\":\"string\"},{\"name\":\"shipping\",\"type\":\"double\"},{\"name\":\"imageData\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"items\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"ItemAvro\",\"fields\":[{\"name\":\"sku\",\"type\":\"string\"},{\"name\":\"quantity\",\"type\":\"int\"},{\"name\":\"price\",\"type\":\"double\"}]}}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
@@ -74,6 +74,8 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
   private java.lang.CharSequence orderId;
+  private double shipping;
+  private java.nio.ByteBuffer imageData;
   private java.util.List<com.ross.excel.serializer.ItemAvro> items;
 
   /**
@@ -86,10 +88,14 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
   /**
    * All-args constructor.
    * @param orderId The new value for orderId
+   * @param shipping The new value for shipping
+   * @param imageData The new value for imageData
    * @param items The new value for items
    */
-  public OrderAvro(java.lang.CharSequence orderId, java.util.List<com.ross.excel.serializer.ItemAvro> items) {
+  public OrderAvro(java.lang.CharSequence orderId, java.lang.Double shipping, java.nio.ByteBuffer imageData, java.util.List<com.ross.excel.serializer.ItemAvro> items) {
     this.orderId = orderId;
+    this.shipping = shipping;
+    this.imageData = imageData;
     this.items = items;
   }
 
@@ -104,7 +110,9 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
   public java.lang.Object get(int field$) {
     switch (field$) {
     case 0: return orderId;
-    case 1: return items;
+    case 1: return shipping;
+    case 2: return imageData;
+    case 3: return items;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -115,7 +123,9 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
     case 0: orderId = (java.lang.CharSequence)value$; break;
-    case 1: items = (java.util.List<com.ross.excel.serializer.ItemAvro>)value$; break;
+    case 1: shipping = (java.lang.Double)value$; break;
+    case 2: imageData = (java.nio.ByteBuffer)value$; break;
+    case 3: items = (java.util.List<com.ross.excel.serializer.ItemAvro>)value$; break;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -135,6 +145,40 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
    */
   public void setOrderId(java.lang.CharSequence value) {
     this.orderId = value;
+  }
+
+  /**
+   * Gets the value of the 'shipping' field.
+   * @return The value of the 'shipping' field.
+   */
+  public double getShipping() {
+    return shipping;
+  }
+
+
+  /**
+   * Sets the value of the 'shipping' field.
+   * @param value the value to set.
+   */
+  public void setShipping(double value) {
+    this.shipping = value;
+  }
+
+  /**
+   * Gets the value of the 'imageData' field.
+   * @return The value of the 'imageData' field.
+   */
+  public java.nio.ByteBuffer getImageData() {
+    return imageData;
+  }
+
+
+  /**
+   * Sets the value of the 'imageData' field.
+   * @param value the value to set.
+   */
+  public void setImageData(java.nio.ByteBuffer value) {
+    this.imageData = value;
   }
 
   /**
@@ -196,6 +240,8 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
     implements org.apache.avro.data.RecordBuilder<OrderAvro> {
 
     private java.lang.CharSequence orderId;
+    private double shipping;
+    private java.nio.ByteBuffer imageData;
     private java.util.List<com.ross.excel.serializer.ItemAvro> items;
 
     /** Creates a new Builder */
@@ -213,9 +259,17 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
         this.orderId = data().deepCopy(fields()[0].schema(), other.orderId);
         fieldSetFlags()[0] = other.fieldSetFlags()[0];
       }
-      if (isValidValue(fields()[1], other.items)) {
-        this.items = data().deepCopy(fields()[1].schema(), other.items);
+      if (isValidValue(fields()[1], other.shipping)) {
+        this.shipping = data().deepCopy(fields()[1].schema(), other.shipping);
         fieldSetFlags()[1] = other.fieldSetFlags()[1];
+      }
+      if (isValidValue(fields()[2], other.imageData)) {
+        this.imageData = data().deepCopy(fields()[2].schema(), other.imageData);
+        fieldSetFlags()[2] = other.fieldSetFlags()[2];
+      }
+      if (isValidValue(fields()[3], other.items)) {
+        this.items = data().deepCopy(fields()[3].schema(), other.items);
+        fieldSetFlags()[3] = other.fieldSetFlags()[3];
       }
     }
 
@@ -229,9 +283,17 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
         this.orderId = data().deepCopy(fields()[0].schema(), other.orderId);
         fieldSetFlags()[0] = true;
       }
-      if (isValidValue(fields()[1], other.items)) {
-        this.items = data().deepCopy(fields()[1].schema(), other.items);
+      if (isValidValue(fields()[1], other.shipping)) {
+        this.shipping = data().deepCopy(fields()[1].schema(), other.shipping);
         fieldSetFlags()[1] = true;
+      }
+      if (isValidValue(fields()[2], other.imageData)) {
+        this.imageData = data().deepCopy(fields()[2].schema(), other.imageData);
+        fieldSetFlags()[2] = true;
+      }
+      if (isValidValue(fields()[3], other.items)) {
+        this.items = data().deepCopy(fields()[3].schema(), other.items);
+        fieldSetFlags()[3] = true;
       }
     }
 
@@ -276,6 +338,85 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
     }
 
     /**
+      * Gets the value of the 'shipping' field.
+      * @return The value.
+      */
+    public double getShipping() {
+      return shipping;
+    }
+
+
+    /**
+      * Sets the value of the 'shipping' field.
+      * @param value The value of 'shipping'.
+      * @return This builder.
+      */
+    public com.ross.excel.serializer.OrderAvro.Builder setShipping(double value) {
+      validate(fields()[1], value);
+      this.shipping = value;
+      fieldSetFlags()[1] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'shipping' field has been set.
+      * @return True if the 'shipping' field has been set, false otherwise.
+      */
+    public boolean hasShipping() {
+      return fieldSetFlags()[1];
+    }
+
+
+    /**
+      * Clears the value of the 'shipping' field.
+      * @return This builder.
+      */
+    public com.ross.excel.serializer.OrderAvro.Builder clearShipping() {
+      fieldSetFlags()[1] = false;
+      return this;
+    }
+
+    /**
+      * Gets the value of the 'imageData' field.
+      * @return The value.
+      */
+    public java.nio.ByteBuffer getImageData() {
+      return imageData;
+    }
+
+
+    /**
+      * Sets the value of the 'imageData' field.
+      * @param value The value of 'imageData'.
+      * @return This builder.
+      */
+    public com.ross.excel.serializer.OrderAvro.Builder setImageData(java.nio.ByteBuffer value) {
+      validate(fields()[2], value);
+      this.imageData = value;
+      fieldSetFlags()[2] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'imageData' field has been set.
+      * @return True if the 'imageData' field has been set, false otherwise.
+      */
+    public boolean hasImageData() {
+      return fieldSetFlags()[2];
+    }
+
+
+    /**
+      * Clears the value of the 'imageData' field.
+      * @return This builder.
+      */
+    public com.ross.excel.serializer.OrderAvro.Builder clearImageData() {
+      imageData = null;
+      fieldSetFlags()[2] = false;
+      return this;
+    }
+
+    /**
       * Gets the value of the 'items' field.
       * @return The value.
       */
@@ -290,9 +431,9 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
       * @return This builder.
       */
     public com.ross.excel.serializer.OrderAvro.Builder setItems(java.util.List<com.ross.excel.serializer.ItemAvro> value) {
-      validate(fields()[1], value);
+      validate(fields()[3], value);
       this.items = value;
-      fieldSetFlags()[1] = true;
+      fieldSetFlags()[3] = true;
       return this;
     }
 
@@ -301,7 +442,7 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
       * @return True if the 'items' field has been set, false otherwise.
       */
     public boolean hasItems() {
-      return fieldSetFlags()[1];
+      return fieldSetFlags()[3];
     }
 
 
@@ -311,7 +452,7 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
       */
     public com.ross.excel.serializer.OrderAvro.Builder clearItems() {
       items = null;
-      fieldSetFlags()[1] = false;
+      fieldSetFlags()[3] = false;
       return this;
     }
 
@@ -321,7 +462,9 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
       try {
         OrderAvro record = new OrderAvro();
         record.orderId = fieldSetFlags()[0] ? this.orderId : (java.lang.CharSequence) defaultValue(fields()[0]);
-        record.items = fieldSetFlags()[1] ? this.items : (java.util.List<com.ross.excel.serializer.ItemAvro>) defaultValue(fields()[1]);
+        record.shipping = fieldSetFlags()[1] ? this.shipping : (java.lang.Double) defaultValue(fields()[1]);
+        record.imageData = fieldSetFlags()[2] ? this.imageData : (java.nio.ByteBuffer) defaultValue(fields()[2]);
+        record.items = fieldSetFlags()[3] ? this.items : (java.util.List<com.ross.excel.serializer.ItemAvro>) defaultValue(fields()[3]);
         return record;
       } catch (org.apache.avro.AvroMissingFieldException e) {
         throw e;
@@ -356,6 +499,16 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
   {
     out.writeString(this.orderId);
 
+    out.writeDouble(this.shipping);
+
+    if (this.imageData == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeBytes(this.imageData);
+    }
+
     long size0 = this.items.size();
     out.writeArrayStart();
     out.setItemCount(size0);
@@ -378,6 +531,15 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
     if (fieldOrder == null) {
       this.orderId = in.readString(this.orderId instanceof Utf8 ? (Utf8)this.orderId : null);
 
+      this.shipping = in.readDouble();
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.imageData = null;
+      } else {
+        this.imageData = in.readBytes(this.imageData);
+      }
+
       long size0 = in.readArrayStart();
       java.util.List<com.ross.excel.serializer.ItemAvro> a0 = this.items;
       if (a0 == null) {
@@ -397,13 +559,26 @@ public class OrderAvro extends org.apache.avro.specific.SpecificRecordBase imple
       }
 
     } else {
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 4; i++) {
         switch (fieldOrder[i].pos()) {
         case 0:
           this.orderId = in.readString(this.orderId instanceof Utf8 ? (Utf8)this.orderId : null);
           break;
 
         case 1:
+          this.shipping = in.readDouble();
+          break;
+
+        case 2:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.imageData = null;
+          } else {
+            this.imageData = in.readBytes(this.imageData);
+          }
+          break;
+
+        case 3:
           long size0 = in.readArrayStart();
           java.util.List<com.ross.excel.serializer.ItemAvro> a0 = this.items;
           if (a0 == null) {
