@@ -4,6 +4,12 @@
   "namespace": "com.ross.excel.serializer",
   "fields": [
     { "name": "orderId", "type": "string" },
+    { "name": "shipping", "type": "double"},
+    {
+      "name": "imageData",
+      "type": [ "null", "bytes" ],
+      "default": null
+    },    
     {
       "name": "items",
       "type": {

@@ -1,0 +1,7 @@
+description: "Daily job to archive orders in weekly file"
+fileName: "order-archive.avro"
+baseDir: ./
+namingSchedule: WEEKLY
+deflate: 9
+batchRead: 10
+batchWrite: 10

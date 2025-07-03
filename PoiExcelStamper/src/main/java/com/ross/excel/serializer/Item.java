@@ -1,9 +1,12 @@
 package com.ross.excel.serializer;
 
 public class Item {
-    private final String sku;
-    private final int quantity;
-    private final double price;
+    private String sku;
+    private int quantity;
+    private double price;
+
+    // Constructors
+    public Item() {}
 
     public Item(String sku, int quantity, double price) {
         this.sku = sku;
@@ -11,17 +14,15 @@ public class Item {
         this.price = price;
     }
 
-    public String getSku() {
-        return sku;
-    }
+    // Getters and Setters
+    public String getSku() { return sku; }
+    public void setSku(String sku) { this.sku = sku; }
 
-    public int getQuantity() {
-        return quantity;
-    }
+    public int getQuantity() { return quantity; }
+    public void setQuantity(int quantity) { this.quantity = quantity; }
 
-    public double getPrice() {
-        return price;
-    }
+    public double getPrice() { return price; }
+    public void setPrice(double price) { this.price = price; }
 
     @Override
     public String toString() {

@@ -1,73 +1,105 @@
 package com.ross.excel.serializer.avro;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.apache.avro.Schema;
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
 
+import com.ross.excel.serializer.archiver.ArchiveJobParams;
 import com.ross.excel.serializer.archiver.ArchiverStrategy;
-import com.ross.excel.serializer.archiver.ArchiveNameResolver;
 
-public class AvroFileSystemStrategy<T extends SpecificRecord> /* implements ArchiverStrategy */ {
 
-    private String baseDir = null;
-	private ArchiveCommand<T> archiveCommand;
-	private String avroArchiveFilename; 
+public class AvroFileSystemStrategy<T extends SpecificRecord>  implements ArchiverStrategy  {
 
-    public AvroFileSystemStrategy(ArchiveCommand<T> cmd) {
+	private ArchiveJobParams jobParams;
 
-		this.archiveCommand = cmd;		
-        /**this.baseDir = archiveCommand.getBaseDir() != null ? 
-			cmd.getBaseDir() : System.getProperty("user.dir");	*/
-		this.baseDir = System.getProperty("user.dir");		
-		avroArchiveFilename = ArchiveNameResolver.
-			resolveAvroArchiveFileName(cmd.getJobName(), cmd.getArchiveSchedule());
+    public AvroFileSystemStrategy(String job) {
+		this.jobParams = ArchiveJobParams.getInstance(job);	
+		System.out.println(this.jobParams);		
     } 
 
-	 public AvroFileSystemStrategy() {
-	 }
+	public AvroFileSystemStrategy() {
+	}
 
-
-	public <T extends SpecificRecord> void deserialize3(Schema schema,
-			File avroFile, int batchSize, Consumer<List<T>> recordHandler
+	public <T extends SpecificRecord> void readBatches(
+		Schema schema,
+		Function<List<T>, Boolean> recordHandler 
 	) throws IOException {
 		List<T> records = new ArrayList<>();
 		SpecificDatumReader<T> reader = new SpecificDatumReader<>(schema);
+		String fullPath = jobParams.getFileNamingSchedule();
 
-		try (DataFileReader<T> dataFileReader = new DataFileReader<>(avroFile, reader)) {
+		try (DataFileReader<T> dataFileReader = new DataFileReader<>(new File(fullPath), reader)) {
 			while (dataFileReader.hasNext()) {
 				T record = dataFileReader.next();
 				records.add(record);
-				if (records.size() == batchSize) { 
-					recordHandler.accept(records);
+
+				if (records.size() >= jobParams.getBatchWrite() || !dataFileReader.hasNext()) {
+					boolean shouldContinue = recordHandler.apply(records);
 					records.clear();
+					if (!shouldContinue) {
+						System.out.println("Stopping deserialization on handler response");
+						break;
+					}
 				}
 			}
-			if (!records.isEmpty()) {
-				recordHandler.accept(records);
-			}
-		}		
+		}
 	}
 
-	public <T extends SpecificRecord> void serializeBatched(Schema schema,
-			File avroFile, int batchSize, Supplier<List<T>> recordSupplier
-		) throws IOException {
-		
+	public <T extends SpecificRecord> void read(
+		Schema schema,
+		Function<T, Boolean> recordHandler 
+	) throws IOException {
+		SpecificDatumReader<T> reader = new SpecificDatumReader<>(schema);
+		String fullPath = jobParams.getFileNamingSchedule();
+
+		try (DataFileReader<T> dataFileReader = new DataFileReader<>(new File(fullPath), reader)) {
+			while (dataFileReader.hasNext()) {
+				T record = dataFileReader.next();
+				boolean shouldContinue = recordHandler.apply(record);
+				if (!shouldContinue) {
+					System.out.println("Stopping deserialization on handler response");
+					break;
+				}
+			}
+		}
+	}
+
+
+	public <T extends SpecificRecord> void write(
+			Schema schema,
+			Supplier<List<T>> recordSupplier
+	) throws IOException {
+
+		String fullPath = jobParams.getFileNamingSchedule();
+		File avroFile = new File(fullPath);
 		SpecificDatumWriter<T> writer = new SpecificDatumWriter<>(schema);
+		System.out.println("serializing: " + fullPath);
 
 		try (DataFileWriter<T> dataFileWriter = new DataFileWriter<>(writer)) {
-			dataFileWriter.create(schema, avroFile);
+			if (jobParams.getDeflate() > 0) {
+				//System.out.println("compression .." + jobParams.getDeflate());
+				dataFileWriter.setCodec(CodecFactory.deflateCodec(jobParams.getDeflate())); 
+			}
+
+			if (avroFile.exists()) {
+				dataFileWriter.appendTo(avroFile);
+			} else {
+				dataFileWriter.create(schema, avroFile);
+			}
 
 			List<T> batch;
 			while (!(batch = recordSupplier.get()).isEmpty()) {
@@ -78,94 +110,63 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> /* implements Arch
 		}
 	}
 
-    public static <T extends SpecificRecord> List<T> find(
-            Schema schema,
-            File avroFile,
-            Predicate<T> filter
-    ) throws IOException {
-        List<T> matchingRecords = new ArrayList<>();
-        SpecificDatumReader<T> reader = new SpecificDatumReader<>(schema);
+	public <T extends SpecificRecord> void readAll(
+		Schema schema,
+		Consumer<List<T>> recordHandler
+	) throws IOException {
+		List<T> records = new ArrayList<>();
+		SpecificDatumReader<T> reader = new SpecificDatumReader<>(schema);
+		String fullPath = jobParams.getFileNamingSchedule();
+		System.out.println("deserializing: " + fullPath);	
 
-        try (DataFileReader<T> dataFileReader = new DataFileReader<>(avroFile, reader)) {
-            while (dataFileReader.hasNext()) {
-                T record = dataFileReader.next();
-                if (filter.test(record)) {
-                    matchingRecords.add(record);
-                }
-            }
-        }
-        return matchingRecords;
-    }	
-
-	public static <T extends SpecificRecord> void findWithHandler(
-            Schema schema,
-            File avroFile,
-            Consumer<T> recordHandler
-    ) throws IOException {
-
-        SpecificDatumReader<T> reader = new SpecificDatumReader<>(schema);
-
-        try (DataFileReader<T> dataFileReader = new DataFileReader<>(avroFile, reader)) {
-            while (dataFileReader.hasNext()) {
-                T record = dataFileReader.next();
-                recordHandler.accept(record); 
-            }
-        }
-    }
-	
-}
-
-
-
-
-    /*@Override
-    public void serialize() throws IOException {
-		File outFile = new File(baseDir, avroArchiveFilename);
-		outFile.getParentFile().mkdirs();
-		boolean append = outFile.exists();
-
-		try (FileOutputStream fos = new FileOutputStream(outFile, append);
-			DataFileWriter<SpecificRecord> writer = new DataFileWriter<>(new SpecificDatumWriter<>())) {
-
-			if (!append) {
-				writer.create(archiveCommand.getSchema(), fos);
-			} else {
-				try (DataFileReader<SpecificRecord> reader = 
-					new DataFileReader<>(outFile, new SpecificDatumReader<>())) {
-						
-						writer.appendTo(outFile);
+		try (DataFileReader<T> dataFileReader = new DataFileReader<>(new File(fullPath), reader)) {
+			while (dataFileReader.hasNext()) {
+				T record = dataFileReader.next();				
+				records.add(record);
+				if (records.size() >= jobParams.getBatchWrite() || !dataFileReader.hasNext()) {
+					recordHandler.accept(records);
+					records.clear();
 				}
 			}
-			List<T> records; 
-			while (!(records = archiveCommand.getRecords()).isEmpty()) {
-				for (SpecificRecord record : records) {
-					writer.append(record);
+		}
+	}	
+
+	/*public <T extends SpecificRecord> void findAllMatchingRecords(
+		Schema schema,
+		Predicate<T> recordFilter,
+		Consumer<T> recordHandler
+	) throws IOException {
+		SpecificDatumReader<T> reader = new SpecificDatumReader<>(schema);
+		String fullPath = jobParams.getFileNamingSchedule();
+		System.out.println(">>deserializing (with filter): " + fullPath);
+
+		try (DataFileReader<T> dataFileReader = new DataFileReader<>(new File(fullPath), reader)) {
+			while (dataFileReader.hasNext()) {
+				T record = dataFileReader.next();
+
+				if (recordFilter.test(record)) {
+					recordHandler.accept(record);
 				}
 			}
-
-			writer.flush();
 		}
 	}*/
 
-	/*@Override
-    public void deserialize() throws IOException {
-        List<SpecificRecord> records = new ArrayList<>();
-		File avroFile = new File(baseDir, avroArchiveFilename);
-		SpecificDatumReader<? extends SpecificRecord> reader = 
-			new SpecificDatumReader<>(archiveCommand.getSchema());
-        System.out.println(">>>" + avroFile);
+	public <T extends SpecificRecord> Optional<T> findMatchingRecords(
+		Schema schema,
+		Predicate<T> recordFilter
+	) throws IOException {
+		SpecificDatumReader<T> reader = new SpecificDatumReader<>(schema);
+		String fullPath = jobParams.getFileNamingSchedule();
 
-		try (DataFileReader<? extends SpecificRecord> dataFileReader = 
-			new DataFileReader<>(avroFile, reader)) {
-
-            while (dataFileReader.hasNext()) {
-                SpecificRecord record = dataFileReader.next();
-                records.add(record);
-				if (records.size() == archiveCommand.getReadBatchSize()) {
-					//archiveCommand.setRecords(records);
-					records.clear();
+		try (DataFileReader<T> dataFileReader = new DataFileReader<>(new File(fullPath), reader)) {
+			while (dataFileReader.hasNext()) {
+				T record = dataFileReader.next();
+				if (recordFilter.test(record)) {
+					return Optional.of(record);
 				}
-            }
-        }
-    }*/
+			}
+		}
+		return Optional.empty();
+	}
+}
 
