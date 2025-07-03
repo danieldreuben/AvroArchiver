@@ -1,10 +1,10 @@
 package com.ross.excel.serializer;
 
 import org.springframework.boot.test.context.SpringBootTest;
+
+import com.ross.excel.serializer.archiver.AvroFileSystemStrategy;
+
 import org.springframework.beans.factory.annotation.Autowired;
-
-import com.ross.excel.serializer.avro.AvroFileSystemStrategy;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.TestMethodOrder;

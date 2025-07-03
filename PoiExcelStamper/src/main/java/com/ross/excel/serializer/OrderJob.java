@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import com.ross.excel.serializer.avro.AvroFileSystemStrategy;
+import com.ross.excel.serializer.archiver.AvroFileSystemStrategy;
 
 
 public class OrderJob {

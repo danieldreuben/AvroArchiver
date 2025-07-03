@@ -1,4 +1,4 @@
-package com.ross.excel.serializer.avro;
+package com.ross.excel.serializer.archiver;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,9 +17,6 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
-
-import com.ross.excel.serializer.archiver.ArchiveJobParams;
-import com.ross.excel.serializer.archiver.ArchiverStrategy;
 
 
 public class AvroFileSystemStrategy<T extends SpecificRecord>  implements ArchiverStrategy  {
