@@ -12,35 +12,35 @@ import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
 
 public interface ArchiverStrategy {
-    
-    public <T extends SpecificRecord> void readBatches(
-		Schema schema,
-		Function<List<T>, Boolean> recordHandler // return false to stop
-	) throws IOException ;
 
-	public <T extends SpecificRecord> void write(
-            Schema schema,        
-		    Supplier<List<T>> recordSupplier
-    ) throws IOException;    
-
-    public <T extends SpecificRecord> void read(
+    public abstract <T extends SpecificRecord> void read(
 		Schema schema,
-		Function<T, Boolean> recordHandler // return false to stop
+		Function<T, Boolean> recordHandler 
 	) throws IOException; 
 
-	public <T extends SpecificRecord> void readAll(
-            Schema schema,       
-		    Consumer<List<T>> recordHandler
-	) throws IOException;
+	public abstract <T extends SpecificRecord> void write(
+        Schema schema,        
+		Supplier<List<T>> recordSupplier
+    ) throws IOException;    
 
-    /*public <T extends SpecificRecord> void findAllMatchingRecords(
-		    Schema schema,
-		    Predicate<T> recordFilter,
-		    Consumer<T> recordHandler
-	) throws IOException;*/
-
-	public <T extends SpecificRecord> Optional<T> findMatchingRecords(
+	public abstract <T extends SpecificRecord> Optional<T> find(
 		Schema schema,
 		Predicate<T> recordFilter
-	) throws IOException;    
+	) throws IOException;  
+
+	public abstract <T extends SpecificRecord> void readAll(
+        Schema schema,       
+		Consumer<List<T>> recordHandler
+	) throws IOException;
+
+    public abstract <T extends SpecificRecord> void readBatched(
+		Schema schema,
+		Function<List<T>, Boolean> recordHandler 
+	) throws IOException ;
+
+	public abstract <T extends SpecificRecord> void findMatchingRecords(
+		Class<T> clazz,
+		Predicate<T> recordFilter,
+		Function<T, Boolean> onMatch
+	) throws Exception;
 }

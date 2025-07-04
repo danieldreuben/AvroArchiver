@@ -1,7 +1,12 @@
 description: "Daily job to archive orders in weekly file"
 fileName: "order-archive.avro"
 baseDir: ./
+#determins how job auto-names archives files (e.g. weekly = orders-2025W27.avro)
 namingSchedule: WEEKLY
-deflate: 9
-batchRead: 10
-batchWrite: 10
+#0 =  off, 9 max deflate compression
+deflate: 9 
+batchRead: 5
+batchWrite: 5
+# for blob strategy
+endpoint: "https://mystore.blob.core.windows.net" 
+container: "order-archive"                        

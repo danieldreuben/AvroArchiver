@@ -14,7 +14,9 @@ public class ArchiveJobParams {
     private ArchiveSchedule namingSchedule;
     private String fileName;
     private String baseDir;
-    private int deflate = 0; // max
+    private String container;
+    private String endpoint;
+    private int deflate = 0; // max 9 = off
     private int batchRead = 20;
     private int batchWrite = 20;
     
@@ -87,7 +89,21 @@ public class ArchiveJobParams {
             getBaseDir()+getFileName() :
                 new ArchiveNameResolver().resolveAvroArchiveFileName(getBaseDir()+getFileName(), namingSchedule);
     }
+    public String getEndpoint() {
+        return endpoint;
+    }
 
+    public void setEndpoint(String endpoint) {
+        this.endpoint = endpoint;
+    }
+
+    public String getContainer() {
+        return container;
+    }
+
+    public void setContainer(String container) {
+        this.container = container;
+    }
     public void setDescription(String description) {
         this.description = description;
     }

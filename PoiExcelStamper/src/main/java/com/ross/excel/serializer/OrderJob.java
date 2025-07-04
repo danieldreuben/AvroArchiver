@@ -1,10 +1,6 @@
 package com.ross.excel.serializer;
 
-import java.io.File;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 import com.ross.excel.serializer.archiver.AvroFileSystemStrategy;
@@ -13,10 +9,23 @@ import com.ross.excel.serializer.archiver.AvroFileSystemStrategy;
 public class OrderJob {
 
     public OrderJob() {} 
-  
+
+      void testWriteOrders()  {
+        try {
+            final int[] count = {0};        
+            new AvroFileSystemStrategy<OrderAvro>("OrderJob")
+                .write (
+                    OrderAvro.getClassSchema(),
+                    () -> {
+                        return ++count[0] < 3 ? // simulates a batch write
+                            Order.getSerializableOrders(5) : new ArrayList<>();
+                    }
+                );
+        } catch (Exception e) {}
+    } 
+
     void testReadOrders() {
         try {
-            System.out.println("[begin:testReadOrders]");
             final int[] count = {0};
 
             new AvroFileSystemStrategy<OrderAvro>("OrderJob")
@@ -43,20 +52,6 @@ public class OrderJob {
             e.printStackTrace();
         }
     }
-
-    void testWriteOrders()  {
-        try {
-            final int[] count = {0};        
-            new AvroFileSystemStrategy<OrderAvro>("OrderJob")
-                .write (
-                    OrderAvro.getClassSchema(),
-                    () -> {
-                        return ++count[0] < 3 ? // simulates a batch read
-                            Order.getSerializableOrders(5) : new ArrayList<>();
-                    }
-                );
-        } catch (Exception e) {}
-    } 
 
     /*public void setRecordsFromArchive(List<SpecificRecord> t) {
 
