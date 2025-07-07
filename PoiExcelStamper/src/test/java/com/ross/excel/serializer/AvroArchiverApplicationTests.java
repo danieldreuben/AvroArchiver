@@ -2,6 +2,7 @@ package com.ross.excel.serializer;
 
 import org.springframework.boot.test.context.SpringBootTest;
 
+import com.ross.excel.serializer.archiver.ArchiveJobParams2;
 import com.ross.excel.serializer.archiver.AvroFileSystemStrategy;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,13 @@ class AvroApplicationArchiverTests {
 	void contextLoads() {
 	}
 
+    @Test 
+    void testLoad() {
+        System.out.println("[testLoad]");
+        ArchiveJobParams2 x = ArchiveJobParams2.getInstance("OrderJob2");
+        System.out.println("config: " + x);
+    }
+
     /*@Test
     @org.junit.jupiter.api.Order(1)
     void writeOrdersToArchive() {
@@ -46,7 +54,7 @@ class AvroApplicationArchiverTests {
             System.out.println("[begin:testRead]");            
             final int[] count = {0};
 
-            new AvroFileSystemStrategy<OrderAvro>("OrderJob")
+            new AvroFileSystemStrategy<OrderAvro>("OrderJob2")
                 .read(OrderAvro.getClassSchema(), order -> {
                     OrderAvro o = (OrderAvro) order;
                     System.out.print(".");
@@ -103,7 +111,7 @@ class AvroApplicationArchiverTests {
 
         try {
             AvroFileSystemStrategy<OrderAvro> strategy =
-                new AvroFileSystemStrategy<>("OrderJob");
+                new AvroFileSystemStrategy<>("OrderJob2");
 
             final int[] count = {0};
 
@@ -126,7 +134,7 @@ class AvroApplicationArchiverTests {
             System.out.println("[begin:testReadBatched]");
             final int[] count = {0};
 
-            new AvroFileSystemStrategy<OrderAvro>("OrderJob")
+            new AvroFileSystemStrategy<OrderAvro>("OrderJob2")
                 .readBatched(OrderAvro.getClassSchema(), (List<OrderAvro> batch) -> {
 
                     batch.forEach(order -> System.out.print("$"));
@@ -177,7 +185,7 @@ class AvroApplicationArchiverTests {
         try {
             System.out.println("[testFindOrder]");
             Optional<OrderAvro> match = 
-                new AvroFileSystemStrategy<OrderAvro>("OrderJob")            
+                new AvroFileSystemStrategy<OrderAvro>("OrderJob2")            
             .find(
                 OrderAvro.getClassSchema(),
                 order -> {
@@ -205,7 +213,7 @@ class AvroApplicationArchiverTests {
             System.out.println("[testFindOrders]");
             List<OrderAvro> matches = new ArrayList<>();
 
-            new AvroFileSystemStrategy<OrderAvro>("OrderJob")
+            new AvroFileSystemStrategy<OrderAvro>("OrderJob2")
                 .findMatchingRecords(
                     OrderAvro.class,
                     order -> order.getOrderId().toString().startsWith("ORDER-3"),
