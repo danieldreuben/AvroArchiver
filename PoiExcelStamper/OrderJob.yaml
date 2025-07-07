@@ -1,6 +1,0 @@
-description: "Daily job to archive orders in weekly file"
-namingSchedule: WEEKLY 
-fileName: "order-archive-0626.avro"
-baseDir: ./
-batchRead: 10
-batchWrite: 10
