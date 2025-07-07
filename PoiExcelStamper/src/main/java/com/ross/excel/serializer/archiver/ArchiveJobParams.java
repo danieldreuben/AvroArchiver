@@ -87,7 +87,8 @@ public class ArchiveJobParams {
         
         return (namingSchedule == null) ? 
             getBaseDir()+getFileName() :
-                new ArchiveNameResolver().resolveAvroArchiveFileName(getBaseDir()+getFileName(), namingSchedule);
+                new ArchiveNameResolver()
+                    .resolveAvroArchiveFileName(getBaseDir()+getFileName(), namingSchedule);
     }
     public String getEndpoint() {
         return endpoint;

@@ -23,11 +23,12 @@ import org.apache.avro.specific.SpecificRecord;
 
 public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implements ArchiverStrategy  {
 
-	protected ArchiveJobParams jobParams;
+	protected ArchiveJobParams2 jobParams;
 
     public AvroStreamingStrategy(String job) {
-		this.jobParams = ArchiveJobParams.getInstance(job);	
-		System.out.println(this.jobParams);		
+		//System.out.println(">>>>" + job);			
+		this.jobParams = ArchiveJobParams2.getInstance(job);	
+		//System.out.println(">>>>" + this.jobParams);		
     } 
 
 	public AvroStreamingStrategy() {
@@ -66,7 +67,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 				T record = dataFileReader.next();
 				records.add(record);
 
-				if (records.size() >= jobParams.getBatchRead() || !dataFileReader.hasNext()) {
+				if (records.size() >= jobParams.getJob().getBatchRead() || !dataFileReader.hasNext()) {
 					boolean shouldContinue = recordHandler.apply(records);
 					records.clear();
 					if (!shouldContinue) {
@@ -88,8 +89,8 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 		System.out.println("serializing to output stream...");
 
 		try (DataFileWriter<T> dataFileWriter = new DataFileWriter<>(writer)) {
-			if (jobParams.getDeflate() > 0) {
-				dataFileWriter.setCodec(CodecFactory.deflateCodec(jobParams.getDeflate()));
+			if (jobParams.getJob().getDeflate() > 0) {
+				dataFileWriter.setCodec(CodecFactory.deflateCodec(jobParams.getJob().getDeflate()));
 			}
 
 			dataFileWriter.create(schema, outputStream);
@@ -116,7 +117,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 			while (dataFileReader.hasNext()) {
 				T record = dataFileReader.next();
 				records.add(record);
-				if (records.size() >= jobParams.getBatchWrite() || !dataFileReader.hasNext()) {
+				if (records.size() >= jobParams.getJob().getBatchRead() || !dataFileReader.hasNext()) {
 					recordHandler.accept(records);
 					records.clear();
 				}
@@ -129,7 +130,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 		Predicate<T> recordFilter
 	) throws IOException {
 		SpecificDatumReader<T> reader = new SpecificDatumReader<>(schema);
-		String fullPath = jobParams.getFileNamingSchedule();
+		String fullPath = jobParams.getNaming();
 
 		try (DataFileReader<T> dataFileReader = new DataFileReader<>(new File(fullPath), reader)) {
 			while (dataFileReader.hasNext()) {

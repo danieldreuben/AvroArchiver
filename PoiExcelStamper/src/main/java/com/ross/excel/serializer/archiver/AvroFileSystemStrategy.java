@@ -19,19 +19,20 @@ import org.apache.avro.specific.SpecificRecord;
 public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStreamingStrategy<T> {
 
     public AvroFileSystemStrategy(String job) {
-		this.jobParams = ArchiveJobParams.getInstance(job);		
+		//this.jobParams = ArchiveJobParams2.getInstance(job);		
+        super(job);
     } 
     
-	public AvroFileSystemStrategy() {
+	/*public AvroFileSystemStrategy() {
         super();
-	}    
+	}   */ 
 
     @Override
     public <T extends SpecificRecord> void read(
         Schema schema,
         Function<T, Boolean> recordHandler
     ) throws IOException {
-        String fullPath = jobParams.getFileNamingSchedule();
+        String fullPath = jobParams.getNaming();
         File file = new File(fullPath);
 
         try (SeekableInput input = new SeekableFileInput(file)) {
@@ -47,7 +48,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         Schema schema,
         Consumer<List<T>> recordHandler
     ) throws IOException {
-        String fullPath = jobParams.getFileNamingSchedule();
+        String fullPath = jobParams.getNaming();
         File file = new File(fullPath);
 
         try (SeekableInput input = new SeekableFileInput(file)) {
@@ -63,7 +64,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         Schema schema,
         Function<List<T>, Boolean> recordHandler
     ) throws IOException {
-        String fullPath = jobParams.getFileNamingSchedule();
+        String fullPath = jobParams.getNaming();
         File file = new File(fullPath);
 
         try (SeekableInput input = new SeekableFileInput(file)) {
@@ -79,7 +80,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         Schema schema,
         Supplier<List<T>> recordSupplier
     ) throws IOException {
-        String fullPath = jobParams.getFileNamingSchedule();
+        String fullPath = jobParams.getNaming();
         File file = new File(fullPath);
 
         try {
@@ -114,7 +115,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         Predicate<T> recordFilter,
         Function<T, Boolean> onMatch
     ) throws Exception {
-        String fullPath = jobParams.getFileNamingSchedule();
+        String fullPath = jobParams.getNaming();
         File file = new File(fullPath);
 
         try (SeekableInput input = new SeekableFileInput(file)) {
