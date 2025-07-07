@@ -28,13 +28,6 @@ class AvroApplicationArchiverTests {
 	void contextLoads() {
 	}
 
-    @Test 
-    void testLoad() {
-        System.out.println("[testLoad]");
-        ArchiveJobParams x = ArchiveJobParams.getInstance("OrderJob2");
-        System.out.println("config: " + x);
-    }
-
     /*@Test
     @org.junit.jupiter.api.Order(1)
     void writeOrdersToArchive() {
@@ -57,7 +50,7 @@ class AvroApplicationArchiverTests {
             new AvroFileSystemStrategy<OrderAvro>("OrderJob2")
                 .read(OrderAvro.getClassSchema(), order -> {
                     OrderAvro o = (OrderAvro) order;
-                    System.out.print(".");
+                    System.out.print("$");
                     // e.g. o.getOrderId();
                     return ++count[0] < 10; // stop after n results
                 });
@@ -96,7 +89,7 @@ class AvroApplicationArchiverTests {
                     OrderAvro.getClassSchema(),
                     (List<OrderAvro> orders) -> {
                         //orders.forEach(order -> System.out.print(order.getOrderId()+", "));
-                        orders.forEach(order -> System.out.print("."));
+                        orders.forEach(order -> System.out.print("$"));
                     }
                 );
         } catch (Exception e) {
@@ -229,42 +222,5 @@ class AvroApplicationArchiverTests {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-
-    /*@Test
-    void testFindFirstOrder() {
-        try {
-            System.out.println("[testFindOrder]");
-            Optional<OrderAvro> result = new AvroFileSystemStrategy<OrderAvro>("OrderJob")
-                .findMatchingRecords(
-                    OrderAvro.getClassSchema(),
-                    order -> order.getOrderId().toString().startsWith("ORDER-8")
-                );
-
-            result.ifPresent(order -> System.out.println("Found order: " + order));
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-   }  */
-
-    /*@Test
-    void testFindOrders()  {
-        try {
-            new AvroFileSystemStrategy<OrderAvro>("OrderJob");
-            AvroFileSystemStrategy
-                    .findWithHandler(OrderAvro.getClassSchema(), new File("order-archive-0625.avro"), 
-                    (OrderAvro order) -> {
-                        if (order.getShipping() > 4800) {
-                            System.out.println("Matched shipping > 4800: id " + order.getOrderId() + " shipping " + order.getShipping());
-                        }
-            });
-
-        } catch (Exception e) {}
-    }    */
-
-
-
-     
+    }     
 }

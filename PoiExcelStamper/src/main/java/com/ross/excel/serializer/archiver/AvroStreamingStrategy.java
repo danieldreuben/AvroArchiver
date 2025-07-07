@@ -46,7 +46,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 				T record = dataFileReader.next();
 				boolean shouldContinue = recordHandler.apply(record);
 				if (!shouldContinue) {
-					System.out.println("Stopping deserialization on handler response");
+					System.out.println("Terminated deserialization handler on response");
 					break;
 				}
 			}
@@ -71,7 +71,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 					boolean shouldContinue = recordHandler.apply(records);
 					records.clear();
 					if (!shouldContinue) {
-						System.out.println("Stopped deserialization on handler response");
+						System.out.println("Terminated deserialization handler on response");
 						break;
 					}
 				}
@@ -86,7 +86,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 	) throws IOException {
 
 		SpecificDatumWriter<T> writer = new SpecificDatumWriter<>(schema);
-		System.out.println("serializing to output stream...");
+		//System.out.println("serializing to output stream...");
 
 		try (DataFileWriter<T> dataFileWriter = new DataFileWriter<>(writer)) {
 			if (jobParams.getJob().getDeflate() > 0) {
@@ -103,7 +103,6 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 			}
 		}
 	}
-
 
 	public <T extends SpecificRecord> void readAll(
 		Schema schema,

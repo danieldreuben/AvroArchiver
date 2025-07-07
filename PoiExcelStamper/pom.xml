@@ -48,7 +48,17 @@
 			<artifactId>azure-storage-blob</artifactId>
 			<version>12.25.0</version>
 		</dependency>
-	
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>9.9.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-queryparser</artifactId>
+			<version>9.9.2</version>
+		</dependency>	
 
  </dependencies>
 
