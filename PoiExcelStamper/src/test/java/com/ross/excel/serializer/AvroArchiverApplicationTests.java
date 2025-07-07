@@ -2,7 +2,7 @@ package com.ross.excel.serializer;
 
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.ross.excel.serializer.archiver.ArchiveJobParams2;
+import com.ross.excel.serializer.archiver.ArchiveJobParams;
 import com.ross.excel.serializer.archiver.AvroFileSystemStrategy;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ class AvroApplicationArchiverTests {
     @Test 
     void testLoad() {
         System.out.println("[testLoad]");
-        ArchiveJobParams2 x = ArchiveJobParams2.getInstance("OrderJob2");
+        ArchiveJobParams x = ArchiveJobParams.getInstance("OrderJob2");
         System.out.println("config: " + x);
     }
 

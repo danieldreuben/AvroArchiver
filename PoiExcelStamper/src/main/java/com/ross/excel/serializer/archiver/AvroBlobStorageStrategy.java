@@ -20,7 +20,7 @@ public class AvroBlobStorageStrategy<T extends SpecificRecord> extends AvroStrea
     private final BlobClient blobClient;
 
     public AvroBlobStorageStrategy(String job) {
-        this.jobParams = ArchiveJobParams2.getInstance(job);
+        this.jobParams = ArchiveJobParams.getInstance(job);
         this.blobClient = new BlobClientBuilder()
                 .endpoint(jobParams.getStorage().getBlob().getEndpoint())
                 .containerName(jobParams.getStorage().getBlob().getContainer())

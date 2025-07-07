@@ -23,11 +23,11 @@ import org.apache.avro.specific.SpecificRecord;
 
 public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implements ArchiverStrategy  {
 
-	protected ArchiveJobParams2 jobParams;
+	protected ArchiveJobParams jobParams;
 
     public AvroStreamingStrategy(String job) {
 		//System.out.println(">>>>" + job);			
-		this.jobParams = ArchiveJobParams2.getInstance(job);	
+		this.jobParams = ArchiveJobParams.getInstance(job);	
 		//System.out.println(">>>>" + this.jobParams);		
     } 
 

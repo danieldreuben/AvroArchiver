@@ -1,8 +1,6 @@
 package com.ross.excel.serializer.archiver;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -10,139 +8,180 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 public class ArchiveJobParams {
-    private String description;
-    private ArchiveSchedule namingSchedule;
-    private String fileName;
-    private String baseDir;
-    private String container;
-    private String endpoint;
-    private int deflate = 0; // max 9 = off
-    private int batchRead = 20;
-    private int batchWrite = 20;
-    
 
-    public ArchiveJobParams() {
-    }
+    private Job job;
+    private Storage storage;
 
-    public static ArchiveJobParams getInstance(String job) {
-        try {
-            //System.out.println("job: " + job);
-            if (job.contains(".")) {
-                File file = new File(job);
-                ArchiveJobParams params = new ArchiveJobParams();
-                params.setFileName(file.getName());
-                params.setBaseDir(file.getParent() != null ? file.getParent() : "");
-                return params;
-            }
-        
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            String resourcePath = "/" + job + ".yaml"; // Add leading slash for classpath lookup
-
-            InputStream is = ArchiveJobParams.class.getResourceAsStream(resourcePath);
-            if (is == null) {
-                throw new FileNotFoundException("YAML file not found on classpath: " + resourcePath);
-            } 
-
-            ArchiveJobParams params = mapper.readValue(is, ArchiveJobParams.class);
-            return params;
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load job config for: " + job, e);
-        }
-    } 
- 
-    public String getDescription() {
-        return this.description;
-    }
-
-    public String getFileName() {
-        return this.fileName;
-    }
-
-    public int getDeflate() {
-        return this.deflate;
-    }
-
-    public ArchiveSchedule getNamingSchedule() {
-        return this.namingSchedule;
-    }
-
-    public String getBaseDir() {
-        return this.baseDir;
-    }
-
-    public String getFullPath() {
-        return this.baseDir + this.fileName;
-    }
-
-    public int getBatchRead() {
-        return this.batchRead;
-    }
-
-    public int getBatchWrite() {
-        return this.batchWrite;
-    }
-
-    public String getFileNamingSchedule() {
-        
-        return (namingSchedule == null) ? 
-            getBaseDir()+getFileName() :
-                new ArchiveNameResolver()
-                    .resolveAvroArchiveFileName(getBaseDir()+getFileName(), namingSchedule);
-    }
-    public String getEndpoint() {
-        return endpoint;
-    }
-
-    public void setEndpoint(String endpoint) {
-        this.endpoint = endpoint;
-    }
-
-    public String getContainer() {
-        return container;
-    }
-
-    public void setContainer(String container) {
-        this.container = container;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setFileName(String filename) {
-        this.fileName = filename;
-    }
-
-    public void setNamingSchedule(ArchiveSchedule namingSchedule) {
-        this.namingSchedule = namingSchedule;
-    }
-
-    public void setBaseDir(String baseDir) {
-        this.baseDir = baseDir;
-    }    
-
-    public void setBatchRead(int t) {
-        this.batchRead = t;
-    }
-    public void setBatchWrite(int t) {
-        this.batchWrite = t;
-    }
-
-    public void setDeflate(int t) {
-        deflate = t;
-    }
-
-    public enum ArchiveSchedule {
+     public enum ArchiveSchedule {
         YEARLY,
         MONTHLY,
         WEEKLY,
         DAILY,
         HOURLY
     }
+   
 
-    @Override
-    public String toString() {
-        return "job: " + this.description + " fileName:" + this.fileName + " schedule:" + namingSchedule;
+    public ArchiveJobParams() {
+        job = new Job();
+        storage = new Storage();
+        storage.setFile(new Storage.FileStorage());
+
+    }
+
+    public static ArchiveJobParams getInstance(String job) {
+        try {       
+            if (job.contains(".")) {
+                File file = new File(job);
+                ArchiveJobParams params = new ArchiveJobParams();
+                params.getJob().setFileName(file.getName());
+                //params.getStorage().setFile(file.getParent() != null ? file.getParent() : "");
+                return params;
+            }                   
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            String fullPath = job + ".yaml";
+            ArchiveJobParams config = mapper.readValue(new File(fullPath), ArchiveJobParams.class);
+          
+            return config;    
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public String getNaming() {
+        return (job.namingSchedule == null) ? 
+            this.getJob().getFileName() :
+                new ArchiveNameResolver().resolveAvroArchiveFileName(this.getJob().getFileName(), job.namingSchedule);            
+        }
+
+    public Job getJob() {
+        return job;
+    }
+
+    public void setJob(Job job) {
+        this.job = job;
+    }
+
+    public Storage getStorage() {
+        return storage;
+    }
+
+    public void setStorage(Storage storage) {
+        this.storage = storage;
+    }
+
+    public static class Job {
+        private String description;
+        private ArchiveSchedule namingSchedule;
+        private String fileName;
+        private int deflate;
+        private int batchRead;
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.
+            description = description;
+        }
+        public ArchiveSchedule getNamingSchedule() {
+            return namingSchedule;
+        }
+
+        public void setNamingSchedule(ArchiveSchedule namingSchedule) {
+            this.namingSchedule = namingSchedule;
+        }  
+
+        public String getFileName() {
+            return fileName;
+        }
+
+        public void setFileName(String fileName) {
+            this.fileName = fileName;
+        }
+
+        public int getDeflate() {
+            return deflate;
+        }
+
+        public void setDeflate(int deflate) {
+            this.deflate = deflate;
+        }
+
+        public int getBatchRead() {
+            return batchRead;
+        }
+
+        public void setBatchRead(int batchRead) {
+            this.batchRead = batchRead;
+        }
+    }
+
+    public static class Storage {
+        private String type;
+        private FileStorage file;
+        private BlobStorage blob;
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public FileStorage getFile() {
+            return file;
+        }
+
+        public void setFile(FileStorage file) {
+            this.file = file;
+        }
+
+        public BlobStorage getBlob() {
+            return blob;
+        }
+
+        public void setBlob(BlobStorage blob) {
+            this.blob = blob;
+        }
+
+        public static class FileStorage {
+        
+            private String baseDir;
+
+            public String getBaseDir() {
+                return baseDir;
+            }
+
+            public void setBaseDir(String baseDir) {
+                this.baseDir = baseDir;
+            }
+        }
+
+        public static class BlobStorage {
+            private String endpoint;
+            private String container;
+
+            public String getEndpoint() {
+                return endpoint;
+            }
+
+            public void setEndpoint(String endpoint) {
+                this.endpoint = endpoint;
+            }
+
+            public String getContainer() {
+                return container;
+            }
+
+            public void setContainer(String container) {
+                this.container = container;
+            }
+        }
     }
 
     public class ArchiveNameResolver {
@@ -181,6 +220,17 @@ public class ArchiveJobParams {
             return baseName + "-" + suffix + ".avro";
         }
     }
+   
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("{");
+        sb.append("description='").append(this.getJob().getDescription()).append('\'');
+        sb.append(", namingSchedule='").append(this.getJob().getNamingSchedule()).append('\'');
+        sb.append(", fileName='").append(this.getJob().getFileName()).append('\'');
+        sb.append(", deflate=").append(this.getJob().getDeflate());
+        sb.append(", batchRead=").append(this.getJob().getBatchRead());
+        sb.append('}');
+        return sb.toString();
+    }
+
 }
-
-
