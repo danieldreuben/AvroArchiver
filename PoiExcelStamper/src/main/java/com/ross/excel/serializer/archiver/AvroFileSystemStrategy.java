@@ -158,6 +158,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
             return Optional.empty();
         }
     }*/
+    
     public Optional<List<GenericIndexHelper.MatchResult>> find(String id) {
         try {
             List<GenericIndexHelper.MatchResult> results = indexHelper.findLocationsForIndex(id);
