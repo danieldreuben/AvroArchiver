@@ -2,7 +2,10 @@ package com.ross.excel.serializer.archiver;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -18,14 +21,9 @@ import org.apache.avro.specific.SpecificRecord;
 
 public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStreamingStrategy<T> {
 
-    public AvroFileSystemStrategy(String job) {
-		//this.jobParams = ArchiveJobParams2.getInstance(job);		
+    public AvroFileSystemStrategy(String job) {	
         super(job);
     } 
-    
-	/*public AvroFileSystemStrategy() {
-        super();
-	}   */ 
 
     @Override
     public <T extends SpecificRecord> void read(
@@ -98,7 +96,8 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
                 for (T record : batch) {
                     dataFileWriter.append(record);
                     System.out.print(".");
-                }
+                } 
+                super.writeIndex(batch);
             }
 
             dataFileWriter.close();
@@ -123,6 +122,16 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
+        }
+    }
+
+    public Optional<List<String>> find(String id) {
+        try {
+            return Optional.ofNullable(indexHelper.findLocationsForIndex(id));
+        } catch (Exception e) {
+            System.err.println("Failed to find locations for index [" + id + "]: " + e.getMessage());
+            e.printStackTrace();
+            return Optional.empty();
         }
     }
 }

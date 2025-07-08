@@ -1,10 +1,13 @@
 job:
   description: "Daily job to archive orders in weekly file"
-  namingSchedule: WEEKLY                                        # Options: DAILY, WEEKLY, MONTHLY, etc.
+  namingSchedule: DAILY                                         # Options: DAILY, WEEKLY, MONTHLY, etc.
   fileName: "order-archive.avro"
   deflate: 9                                                    # Compression level: 0 (off) to 9 (max)
-  batchRead: 5                                                  # Number of records per read batch
-  #batchWrite: 5                                                 # Number of records per write batch
+  batchRead: 5                                                  # Records per batch read
+
+indexer:
+  name: order-indexer
+  method: getOrderId
 
 storage:
   type: "file"                                                  # Options: "file", "blob"
@@ -14,4 +17,4 @@ storage:
 
   blob:
     endpoint: "https://mystore.blob.core.windows.net"
-    container: "order-archive"
+    container: "order-archive2"

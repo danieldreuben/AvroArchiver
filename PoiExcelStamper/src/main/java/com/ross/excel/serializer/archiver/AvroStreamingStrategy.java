@@ -3,6 +3,8 @@ package com.ross.excel.serializer.archiver;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,11 +26,20 @@ import org.apache.avro.specific.SpecificRecord;
 public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implements ArchiverStrategy  {
 
 	protected ArchiveJobParams jobParams;
+    GenericIndexHelper indexHelper;
 
     public AvroStreamingStrategy(String job) {
-		//System.out.println(">>>>" + job);			
 		this.jobParams = ArchiveJobParams.getInstance(job);	
-		//System.out.println(">>>>" + this.jobParams);		
+
+	indexHelper = Optional.ofNullable(jobParams.getIndexer())
+    .map(i -> {
+        try {
+            return new GenericIndexHelper(Paths.get(i.getName()));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create index helper", e);
+        }
+    })
+    .orElse(null); // if indexer is null, indexHelper stays null
     } 
 
 	public AvroStreamingStrategy() {
@@ -99,10 +110,70 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 			while (!(batch = recordSupplier.get()).isEmpty()) {
 				for (T record : batch) {
 					dataFileWriter.append(record);
+                    System.out.print("$");					
 				}
+				 // Index the same batch
+            	//writeIndex(batch);
 			}
 		}
 	}
+
+	protected <T extends SpecificRecord> void writeIndex(List<T> records) {
+		Optional.ofNullable(indexHelper).ifPresent(helper -> {
+			try {
+				helper.open();
+
+				String methodName = jobParams.getIndexer().getMethod();
+				Method method = records.get(0).getClass().getMethod(methodName); // assumes all records same type
+
+				for (T record : records) {
+					String indexKey = (String) method.invoke(record);
+					System.out.print("$");
+
+					helper.indexRecord(indexKey, jobParams.getNaming());
+				}
+
+			} catch (Exception e) {
+				System.err.println("Indexing error: " + e.getMessage());
+				e.printStackTrace();
+			} finally {
+				try {
+					helper.close();
+					System.out.println();
+				} catch (IOException closeEx) {
+					System.err.println("Failed to close indexHelper: " + closeEx.getMessage());
+				}
+			}
+		});
+	}
+
+
+	/*private void writeIndex(T record) {
+		Optional.ofNullable(indexHelper).ifPresent(helper -> {
+			try {
+				helper.open();
+
+				String methodName = jobParams.getIndexer().getMethod();
+				Method method = record.getClass().getMethod(methodName);
+
+				String indexKey = (String) method.invoke(record);
+				System.out.println(">>>> " + indexKey);
+
+				helper.indexRecord(indexKey, jobParams.getNaming());
+
+			} catch (Exception e) {
+				// Proper logging
+				System.err.println("Indexing error: " + e.getMessage());
+				e.printStackTrace();
+			} finally {
+				try {
+					helper.close();
+				} catch (IOException closeEx) {
+					System.err.println("Failed to close indexHelper: " + closeEx.getMessage());
+				}
+			}
+		});
+	}*/
 
 	public <T extends SpecificRecord> void readAll(
 		Schema schema,
@@ -164,6 +235,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 			}
 		}
 	}
+	
 
 	/*public <T extends SpecificRecord> void read(
 		Schema schema,

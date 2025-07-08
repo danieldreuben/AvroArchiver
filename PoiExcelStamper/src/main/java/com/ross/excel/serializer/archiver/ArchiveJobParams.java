@@ -11,6 +11,7 @@ public class ArchiveJobParams {
 
     private Job job;
     private Storage storage;
+    private Indexer indexer;
 
      public enum ArchiveSchedule {
         YEARLY,
@@ -71,6 +72,14 @@ public class ArchiveJobParams {
     public void setStorage(Storage storage) {
         this.storage = storage;
     }
+
+     public Indexer getIndexer() {
+        return indexer;
+    }
+
+    public void setIndexer(Indexer indexer) {
+        this.indexer = indexer;
+    }   
 
     public static class Job {
         private String description;
@@ -182,6 +191,18 @@ public class ArchiveJobParams {
                 this.container = container;
             }
         }
+    }
+
+    public class Indexer {
+        private String name;
+        private String method;
+
+        // Getters and Setters
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+
+        public String getMethod() { return method; }
+        public void setMethod(String method) { this.method = method; }
     }
 
     public class ArchiveNameResolver {
