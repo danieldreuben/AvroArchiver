@@ -149,7 +149,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         }
     }
 
-    public Optional<List<String>> find(String id) {
+   /* public Optional<List<String>> find(String id) {
         try {
             return Optional.ofNullable(indexHelper.findLocationsForIndex(id));
         } catch (Exception e) {
@@ -157,5 +157,16 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
             e.printStackTrace();
             return Optional.empty();
         }
+    }*/
+    public Optional<List<GenericIndexHelper.MatchResult>> find(String id) {
+        try {
+            List<GenericIndexHelper.MatchResult> results = indexHelper.findLocationsForIndex(id);
+            return results.isEmpty() ? Optional.empty() : Optional.of(results);
+        } catch (Exception e) {
+            System.err.println("Failed to find locations for index [" + id + "]: " + e.getMessage());
+            e.printStackTrace();
+            return Optional.empty();
+        }
     }
+
 }

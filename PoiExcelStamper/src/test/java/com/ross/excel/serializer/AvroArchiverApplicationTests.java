@@ -42,18 +42,21 @@ class AvroApplicationArchiverTests {
         new OrderJob().testReadOrders();
     }*/
 
-    @Test
+     @Test
     void findAvroFile() {
         try {
-            System.out.println("[begin:findAvroFile]"); 
-            List<String> items = new AvroFileSystemStrategy<OrderAvro>("OrderJob2")
+            System.out.println("[begin:findAvroFile]");
+            List<GenericIndexHelper.MatchResult> results = new AvroFileSystemStrategy<OrderAvro>("OrderJob2")
                 .find("ORDER-27*")
                 .orElse(Collections.emptyList());
-            items.forEach(System.out::println);
+
+            for (GenericIndexHelper.MatchResult result : results) {
+                System.out.println("Index: " + result.getIndex() + ", File: " + result.getLocation());
+            }
         } catch (Exception e) {
             e.printStackTrace();
-        }   
-    }
+        }
+    }   
 
     @Test
     void testRead() {

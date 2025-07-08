@@ -30,7 +30,6 @@ public class GenericIndexHelper implements Closeable {
             return;
         }
 
-        // Use temp dir to safely check for existing index
         boolean indexExists;
         try (Directory tempDir = FSDirectory.open(indexPath)) {
             indexExists = DirectoryReader.indexExists(tempDir);
@@ -65,7 +64,30 @@ public class GenericIndexHelper implements Closeable {
         indexWriter.addDocument(doc);
     }
 
-    public List<String> findLocationsForIndex(String indexPattern) throws Exception {
+    public static class MatchResult {
+        private final String index;
+        private final String location;
+
+        public MatchResult(String index, String location) {
+            this.index = index;
+            this.location = location;
+        }
+
+        public String getIndex() {
+            return index;
+        }
+
+        public String getLocation() {
+            return location;
+        }
+
+        @Override
+        public String toString() {
+            return "MatchResult{index='" + index + "', location='" + location + "'}";
+        }
+    }
+
+    public List<MatchResult> findLocationsForIndex(String indexPattern) throws Exception {
         if (reader != null) {
             reader.close();
             reader = null;
@@ -95,16 +117,17 @@ public class GenericIndexHelper implements Closeable {
 
         TopDocs results = searcher.search(query, 100);
 
-        List<String> locations = new ArrayList<>();
+        List<MatchResult> matches = new ArrayList<>();
         for (ScoreDoc sd : results.scoreDocs) {
             Document doc = searcher.doc(sd.doc);
             String location = doc.get("location");
-            if (location != null) {
-                locations.add(location);
+            String index = doc.get("index");
+            if (location != null && index != null) {
+                matches.add(new MatchResult(index, location));
             }
         }
 
-        return locations;
+        return matches;
     }
 
     @Override
@@ -117,7 +140,5 @@ public class GenericIndexHelper implements Closeable {
             indexWriter.close();
             indexWriter = null;
         }
-        // Optional: directory.close() if you're not reusing
     }
 }
-
