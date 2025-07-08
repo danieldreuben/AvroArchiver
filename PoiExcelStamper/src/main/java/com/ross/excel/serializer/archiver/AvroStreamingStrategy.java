@@ -118,6 +118,38 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 		}
 	}
 
+	public <T extends SpecificRecord> void write2(
+		Schema schema,
+		File file,
+		Supplier<List<T>> recordSupplier
+	) throws IOException {
+		SpecificDatumWriter<T> writer = new SpecificDatumWriter<>(schema);
+
+		try (DataFileWriter<T> dataFileWriter = new DataFileWriter<>(writer)) {
+			if (jobParams.getJob().getDeflate() > 0) {
+				dataFileWriter.setCodec(CodecFactory.deflateCodec(jobParams.getJob().getDeflate()));
+			}
+
+			if (file.exists()) {
+				// Append to existing Avro file
+				dataFileWriter.appendTo(file);
+			} else {
+				// Create a new file
+				dataFileWriter.create(schema, file);
+			}
+
+			List<T> batch;
+			while (!(batch = recordSupplier.get()).isEmpty()) {
+				for (T record : batch) {
+					dataFileWriter.append(record);
+					System.out.print("$");
+				}
+				// writeIndex(batch); // optional indexing
+			}
+		}
+	}
+
+
 	protected <T extends SpecificRecord> void writeIndex(List<T> records) {
 		Optional.ofNullable(indexHelper).ifPresent(helper -> {
 			try {

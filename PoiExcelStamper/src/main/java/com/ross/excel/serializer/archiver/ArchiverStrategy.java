@@ -1,5 +1,6 @@
 package com.ross.excel.serializer.archiver;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +23,12 @@ public interface ArchiverStrategy {
         Schema schema,        
 		Supplier<List<T>> recordSupplier
     ) throws IOException;    
+	
+	public <T extends SpecificRecord> void write2(
+		Schema schema,
+		File file,
+		Supplier<List<T>> recordSupplier
+	) throws IOException;
 
 	public abstract <T extends SpecificRecord> Optional<T> find(
 		Schema schema,

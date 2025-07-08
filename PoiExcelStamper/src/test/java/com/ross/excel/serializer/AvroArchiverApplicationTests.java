@@ -47,7 +47,7 @@ class AvroApplicationArchiverTests {
         try {
             System.out.println("[begin:findAvroFile]"); 
             List<String> items = new AvroFileSystemStrategy<OrderAvro>("OrderJob2")
-                .find("ORDER-9183")
+                .find("ORDER-27*")
                 .orElse(Collections.emptyList());
             items.forEach(System.out::println);
         } catch (Exception e) {
@@ -113,6 +113,7 @@ class AvroApplicationArchiverTests {
     }      
 
     @Test
+    @org.junit.jupiter.api.Order(1)
     void testWrite() {
         System.out.println("[begin:testWrite]");
 

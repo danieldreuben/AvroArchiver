@@ -53,8 +53,9 @@ public class ArchiveJobParams {
 
     public String getNaming() {
         return (job.namingSchedule == null) ? 
-            this.getJob().getFileName() :
-                new ArchiveNameResolver().resolveAvroArchiveFileName(this.getJob().getFileName(), job.namingSchedule);            
+            getJob().getFileName() :
+                new ArchiveNameResolver().
+                resolveAvroArchiveFileName(getJob().getFileName(), getJob().namingSchedule);            
         }
 
     public Job getJob() {
