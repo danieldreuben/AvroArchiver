@@ -1,11 +1,7 @@
 package com.ross.excel.serializer.archiver;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.reflect.Method;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -14,10 +10,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.apache.avro.Schema;
-import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.SeekableFileInput;
 import org.apache.avro.file.SeekableInput;
-import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
 
 
@@ -34,7 +28,6 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
     ) throws IOException {
         String fullPath = jobParams.getNaming();
         File file = new File(fullPath);
-        //System.out.println(fullPath);
 
         try (SeekableInput input = new SeekableFileInput(file)) {
             super.read(schema, input, recordHandler); 
@@ -51,7 +44,6 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
     ) throws IOException {
         String fullPath = jobParams.getNaming();
         File file = new File(fullPath);
-        //System.out.println(fullPath);
 
         try (SeekableInput input = new SeekableFileInput(file)) {
             super.readAll(schema, input, recordHandler); 
@@ -68,7 +60,6 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
     ) throws IOException {
         String fullPath = jobParams.getNaming();
         File file = new File(fullPath);
-        //System.out.println(fullPath);
 
         try (SeekableInput input = new SeekableFileInput(file)) {
             super.readBatched(schema, input, recordHandler); 
@@ -86,8 +77,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         try {
             String fullPath = jobParams.getNaming();
             File file = new File(fullPath);
-            //System.out.println(fullPath);
-            super.write2(schema, file, recordSupplier);
+            super.write(schema, recordSupplier, file);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -139,7 +129,6 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
     ) throws Exception {
         String fullPath = jobParams.getNaming();
         File file = new File(fullPath);
-        //System.out.println(fullPath);
 
         try (SeekableInput input = new SeekableFileInput(file)) {
             super.findMatchingRecords(clazz, input, recordFilter, onMatch);
@@ -158,8 +147,8 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
             return Optional.empty();
         }
     } */
-
-    public Optional<List<GenericIndexHelper.MatchResult>> find(String id) {
+    /* 
+    public Optional<List<GenericIndexHelper.MatchResult>> indexerFind(String id) {
         try {
             List<GenericIndexHelper.MatchResult> results = indexHelper.findLocationsForIndex(id);
             return results.isEmpty() ? Optional.empty() : Optional.of(results);
@@ -168,6 +157,6 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
             e.printStackTrace();
             return Optional.empty();
         }
-    }
+    } */
 
 }

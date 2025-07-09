@@ -24,10 +24,10 @@ public interface ArchiverStrategy {
 		Supplier<List<T>> recordSupplier
     ) throws IOException;    
 	
-	public <T extends SpecificRecord> void write2(
+	public <T extends SpecificRecord> void write(
 		Schema schema,
-		File file,
-		Supplier<List<T>> recordSupplier
+		Supplier<List<T>> recordSupplier,
+		File file		
 	) throws IOException;
 
 	public abstract <T extends SpecificRecord> Optional<T> find(
@@ -50,4 +50,6 @@ public interface ArchiverStrategy {
 		Predicate<T> recordFilter,
 		Function<T, Boolean> onMatch
 	) throws Exception;
+
+	public ArchiveJobParams getJobParams();
 }

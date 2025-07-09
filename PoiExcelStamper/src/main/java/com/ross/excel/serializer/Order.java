@@ -47,7 +47,7 @@ public class Order {
                 '}';
     }
 
-    public static List<OrderAvro> getSerializableOrders(int num) {            
+    public static List<OrderAvro> getAvroOrders(int num) {            
         List<OrderAvro> records = new ArrayList<>();
         byte[] imageBytes = null;
 

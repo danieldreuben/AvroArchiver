@@ -44,7 +44,7 @@ public class GenericIndexHelper implements Closeable {
                 ? IndexWriterConfig.OpenMode.APPEND
                 : IndexWriterConfig.OpenMode.CREATE);
 
-        System.out.println("Opening index at: " + indexPath);
+        System.out.println("-->sidecar: Lucerne index at: " + indexPath);
         indexWriter = new IndexWriter(directory, config);
     }
 
@@ -129,6 +129,19 @@ public class GenericIndexHelper implements Closeable {
 
         return matches;
     }
+
+    public void deleteKeys(String indexPattern) throws IOException {
+        if (indexWriter == null || !indexWriter.isOpen()) {
+            throw new IllegalStateException("IndexWriter is not open. Call open() first.");
+        }
+
+        String normalizedPattern = indexPattern.toUpperCase();
+        Query query = new WildcardQuery(new Term("index", normalizedPattern));
+        indexWriter.deleteDocuments(query);
+        indexWriter.commit();
+        System.out.println("Deleted documents matching: " + normalizedPattern);
+    }
+
 
     @Override
     public void close() throws IOException {

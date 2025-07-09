@@ -18,7 +18,7 @@ public class OrderJob {
                     OrderAvro.getClassSchema(),
                     () -> {
                         return ++count[0] < 3 ? // simulates a batch write
-                            Order.getSerializableOrders(5) : new ArrayList<>();
+                            Order.getAvroOrders(5) : new ArrayList<>();
                     }
                 );
         } catch (Exception e) {}

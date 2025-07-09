@@ -26,23 +26,28 @@ import org.apache.avro.specific.SpecificRecord;
 public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implements ArchiverStrategy  {
 
 	protected ArchiveJobParams jobParams;
-    GenericIndexHelper indexHelper;
+    //GenericIndexHelper indexHelper;
 
     public AvroStreamingStrategy(String job) {
 		this.jobParams = ArchiveJobParams.getInstance(job);	
-
-	indexHelper = Optional.ofNullable(jobParams.getIndexer())
-    .map(i -> {
-        try {
-            return new GenericIndexHelper(Paths.get(i.getName()));
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to create index helper", e);
-        }
-    })
-    .orElse(null); // if indexer is null, indexHelper stays null
+/* 
+		indexHelper = Optional.ofNullable(jobParams.getIndexer())
+		.map(i -> {
+			try {
+				return new GenericIndexHelper(Paths.get(i.getName()));
+			} catch (IOException e) {
+				throw new RuntimeException("Failed to create index helper", e);
+			}
+		})
+		.orElse(null); // if indexer is null, indexHelper stays null
+*/
     } 
 
 	public AvroStreamingStrategy() {
+	}
+
+	public ArchiveJobParams getJobParams() {
+		return jobParams;
 	}
 
 	protected <T extends SpecificRecord> void read(
@@ -90,14 +95,13 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 		}
 	}
 
-	public <T extends SpecificRecord> void write(
+/* 	public <T extends SpecificRecord> void write(
 		Schema schema,
 		OutputStream outputStream,
 		Supplier<List<T>> recordSupplier
 	) throws IOException {
 
 		SpecificDatumWriter<T> writer = new SpecificDatumWriter<>(schema);
-		//System.out.println("serializing to output stream...");
 
 		try (DataFileWriter<T> dataFileWriter = new DataFileWriter<>(writer)) {
 			if (jobParams.getJob().getDeflate() > 0) {
@@ -112,16 +116,14 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 					dataFileWriter.append(record);
                     System.out.print("$");					
 				}
-				 // Index the same batch
-            	//writeIndex(batch);
 			}
 		}
-	}
+	} */
 
-	public <T extends SpecificRecord> void write2(
+	public <T extends SpecificRecord> void write(
 		Schema schema,
-		File file,
-		Supplier<List<T>> recordSupplier
+		Supplier<List<T>> recordSupplier,
+		File file		
 	) throws IOException {
 		SpecificDatumWriter<T> writer = new SpecificDatumWriter<>(schema);
 
@@ -131,10 +133,8 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 			}
 
 			if (file.exists()) {
-				// Append to existing Avro file
 				dataFileWriter.appendTo(file);
 			} else {
-				// Create a new file
 				dataFileWriter.create(schema, file);
 			}
 
@@ -144,12 +144,11 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 					dataFileWriter.append(record);
 					System.out.print("$");
 				}
-				// writeIndex(batch); // optional indexing
+				//writeIndex(batch); // optional lucerne indexing
 			}
 		}
 	}
-
-
+/* 
 	protected <T extends SpecificRecord> void writeIndex(List<T> records) {
 		Optional.ofNullable(indexHelper).ifPresent(helper -> {
 			try {
@@ -177,35 +176,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 				}
 			}
 		});
-	}
-
-
-	/*private void writeIndex(T record) {
-		Optional.ofNullable(indexHelper).ifPresent(helper -> {
-			try {
-				helper.open();
-
-				String methodName = jobParams.getIndexer().getMethod();
-				Method method = record.getClass().getMethod(methodName);
-
-				String indexKey = (String) method.invoke(record);
-				System.out.println(">>>> " + indexKey);
-
-				helper.indexRecord(indexKey, jobParams.getNaming());
-
-			} catch (Exception e) {
-				// Proper logging
-				System.err.println("Indexing error: " + e.getMessage());
-				e.printStackTrace();
-			} finally {
-				try {
-					helper.close();
-				} catch (IOException closeEx) {
-					System.err.println("Failed to close indexHelper: " + closeEx.getMessage());
-				}
-			}
-		});
-	}*/
+	} */
 
 	public <T extends SpecificRecord> void readAll(
 		Schema schema,
