@@ -24,9 +24,7 @@ import java.util.function.Supplier;
 class AvroApplicationArchiverTests {
 
 	@Test
-	void contextLoads() {
-	}
-
+	void contextLoads() {}
 
     @Test
     @org.junit.jupiter.api.Order(1)
@@ -59,10 +57,10 @@ class AvroApplicationArchiverTests {
 
             AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob2");
             String location = strategy.getJobParams().getNaming();
-
             AtomicBoolean alreadyRun = new AtomicBoolean(false);
 
             Supplier<List<OrderAvro>> indexAwareSupplier = () -> {
+
                 if (alreadyRun.getAndSet(true)) {
                     return Collections.emptyList(); // terminate
                 }
