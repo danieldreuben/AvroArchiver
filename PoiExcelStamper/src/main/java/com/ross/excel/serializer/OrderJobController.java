@@ -33,7 +33,7 @@ public class OrderJobController {
                     Order s = new Order();
                     s.setAvroOrder((OrderAvro) order);
                     System.out.println(s.toString());
-                    return ++count[0] < 5; // stop after N..
+                    return ++count[0] < 25; // stop after N..
                 });
 
         } catch (Exception e) {

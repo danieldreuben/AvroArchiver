@@ -48,6 +48,11 @@ public class GenericIndexHelper implements Closeable {
         indexWriter = new IndexWriter(directory, config);
     }
 
+    public void indexAndCommit(String indexKey, String location) throws IOException {
+        indexRecord(indexKey, location);
+        indexWriter.commit();
+    }
+
     public void indexRecord(String indexKey, String location) throws IOException {
         if (indexWriter == null || !indexWriter.isOpen()) {
             throw new IllegalStateException("IndexWriter is not open. Call open() first.");

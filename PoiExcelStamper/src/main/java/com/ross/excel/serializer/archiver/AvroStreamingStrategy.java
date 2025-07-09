@@ -69,7 +69,6 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 		}
 	}
 
-
 	public <T extends SpecificRecord> void readBatched(
 		Schema schema,
 		SeekableInput input,
@@ -137,14 +136,12 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 			} else {
 				dataFileWriter.create(schema, file);
 			}
-
 			List<T> batch;
 			while (!(batch = recordSupplier.get()).isEmpty()) {
 				for (T record : batch) {
 					dataFileWriter.append(record);
 					System.out.print("$");
 				}
-				//writeIndex(batch); // optional lucerne indexing
 			}
 		}
 	}
