@@ -96,5 +96,20 @@ public class Order {
         return records;
     }
 
+    public void setAvroOrder(OrderAvro t) {
+        Order o = new Order(
+            t.getOrderId().toString(),
+            t.getShipping(),
+            t.getImageData() != null ? t.getImageData().array() : null,
+            t.getItems().stream()
+                .map(itemAvro -> new Item(
+                    itemAvro.getSku().toString(),
+                    itemAvro.getQuantity(),
+                    itemAvro.getPrice()
+                ))
+                .collect(Collectors.toList())
+        );        
+    }
+
 }
 

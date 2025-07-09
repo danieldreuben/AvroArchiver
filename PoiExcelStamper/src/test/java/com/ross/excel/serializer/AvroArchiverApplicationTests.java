@@ -2,14 +2,11 @@ package com.ross.excel.serializer;
 
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.ross.excel.serializer.archiver.ArchiveJobParams;
-import com.ross.excel.serializer.archiver.ArchiveJobParams.Indexer;
+
 import com.ross.excel.serializer.archiver.AvroFileSystemStrategy;
 import com.ross.excel.serializer.archiver.GenericIndexHelper;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.junit.jupiter.api.Test;
-
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.TestMethodOrder;
 

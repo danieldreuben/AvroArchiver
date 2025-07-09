@@ -6,18 +6,18 @@ import java.util.stream.Collectors;
 import com.ross.excel.serializer.archiver.AvroFileSystemStrategy;
 
 
-public class OrderJob {
+public class OrderJobController {
 
-    public OrderJob() {} 
+    public OrderJobController() {} 
 
-      void testWriteOrders()  {
+    void testWriteOrders()  {
         try {
             final int[] count = {0};        
             new AvroFileSystemStrategy<OrderAvro>("OrderJob")
                 .write (
                     OrderAvro.getClassSchema(),
                     () -> {
-                        return ++count[0] < 3 ? // simulates a batch write
+                        return ++count[0] < 5 ? // simulates a batch write
                             Order.getAvroOrders(5) : new ArrayList<>();
                     }
                 );
@@ -30,22 +30,10 @@ public class OrderJob {
 
             new AvroFileSystemStrategy<OrderAvro>("OrderJob")
                 .read(OrderAvro.getClassSchema(), order -> {
-                    OrderAvro t = (OrderAvro) order;
-                    Order o = new Order(
-                        t.getOrderId().toString(),
-                        t.getShipping(),
-                        t.getImageData() != null ? t.getImageData().array() : null,
-                        t.getItems().stream()
-                            .map(itemAvro -> new Item(
-                                itemAvro.getSku().toString(),
-                                itemAvro.getQuantity(),
-                                itemAvro.getPrice()
-                            ))
-                            .collect(Collectors.toList())
-                    );
-
-                    System.out.println("Order (POC style): " + o);
-                    return ++count[0] < 5; // stop after reading N..
+                    Order s = new Order();
+                    s.setAvroOrder((OrderAvro) order);
+                    System.out.println(s.toString());
+                    return ++count[0] < 5; // stop after N..
                 });
 
         } catch (Exception e) {
