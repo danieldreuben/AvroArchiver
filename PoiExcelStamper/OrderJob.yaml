@@ -1,13 +1,13 @@
 job:
   description: "Daily job to archive orders in weekly file"
-  namingSchedule: WEEKLY                                        # Options: DAILY, WEEKLY, MONTHLY, etc.
+  archiveNamingScheme: WEEKLY                                   # Options: DAILY, WEEKLY, MONTHLY, etc.
   fileName: "order-archive.avro"
   deflate: 9                                                    # Compression level: 0 (off) to 9 (max)
   batchRead: 5                                                  # Records per batch read
 
 indexer:
   name: order-indexer
-  method: getOrderId
+  method: simple
 
 storage:
   type: "file"                                                  # Options: "file", "blob"
