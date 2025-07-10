@@ -52,10 +52,10 @@ public class ArchiveJobParams {
 
 
     public String getNaming() {
-        return (job.namingSchedule == null) ? 
+        return (job.archiveNamingScheme == null) ? 
             getJob().getFileName() :
                 new ArchiveNameResolver().
-                resolveAvroArchiveFileName(getJob().getFileName(), getJob().namingSchedule);            
+                resolveAvroArchiveFileName(getJob().getFileName(), getJob().archiveNamingScheme);            
         }
 
     public Job getJob() {
@@ -84,7 +84,7 @@ public class ArchiveJobParams {
 
     public static class Job {
         private String description;
-        private ArchiveSchedule namingSchedule;
+        private ArchiveSchedule archiveNamingScheme;
         private String fileName;
         private int deflate;
         private int batchRead;
@@ -97,12 +97,12 @@ public class ArchiveJobParams {
             this.
             description = description;
         }
-        public ArchiveSchedule getNamingSchedule() {
-            return namingSchedule;
+        public ArchiveSchedule getArchiveNamingScheme() {
+            return archiveNamingScheme;
         }
 
-        public void setNamingSchedule(ArchiveSchedule namingSchedule) {
-            this.namingSchedule = namingSchedule;
+        public void setArchiveNamingScheme(ArchiveSchedule archiveNamingScheme) {
+            this.archiveNamingScheme = archiveNamingScheme;
         }  
 
         public String getFileName() {
@@ -247,7 +247,7 @@ public class ArchiveJobParams {
     public String toString() {
         StringBuilder sb = new StringBuilder("{");
         sb.append("description='").append(this.getJob().getDescription()).append('\'');
-        sb.append(", namingSchedule='").append(this.getJob().getNamingSchedule()).append('\'');
+        sb.append(", archiveNamingScheme='").append(this.getJob().getArchiveNamingScheme()).append('\'');
         sb.append(", fileName='").append(this.getJob().getFileName()).append('\'');
         sb.append(", deflate=").append(this.getJob().getDeflate());
         sb.append(", batchRead=").append(this.getJob().getBatchRead());

@@ -2,8 +2,7 @@
 package com.ross.excel.serializer.archiver;
 
 import com.azure.storage.blob.*;
-import com.azure.storage.blob.models.BlobProperties;
-import com.azure.storage.blob.specialized.BlockBlobClient;
+
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.SeekableByteArrayInput;
