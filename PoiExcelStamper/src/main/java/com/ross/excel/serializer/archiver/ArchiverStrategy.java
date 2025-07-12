@@ -10,10 +10,15 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.apache.avro.Schema;
+import org.apache.avro.message.SchemaStore;
 import org.apache.avro.specific.SpecificRecord;
 
 public interface ArchiverStrategy {
-
+  /**
+   * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
+   * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+   * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
+   */
     public abstract <T extends SpecificRecord> void read(
 		Schema schema,
 		Function<T, Boolean> recordHandler 
