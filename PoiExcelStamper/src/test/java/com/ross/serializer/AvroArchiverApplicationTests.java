@@ -2,11 +2,8 @@ package com.ross.serializer;
 
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.ross.serializer.Order;
-import com.ross.serializer.OrderAvro;
 import com.ross.serializer.stategy.AvroFileSystemStrategy;
 import com.ross.serializer.stategy.GenericIndexHelper;
-import com.ross.serializer.stategy.GenericIndexHelper.MatchResult;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
@@ -18,9 +15,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
-//import java.util.regex.MatchResult;
 
 
 @SpringBootTest
@@ -97,135 +91,7 @@ class AvroApplicationArchiverTests {
         }
     }    
 
-    /*@Test
-    @org.junit.jupiter.api.Order(1)
-    void testWrite() {
-        try {
-            System.out.println("[begin:testWrite]");            
-            AvroFileSystemStrategy<OrderAvro> strategy =
-                new AvroFileSystemStrategy<>("OrderJob");
-
-            final int[] count = {0};
-
-            strategy.write(
-                OrderAvro.getClassSchema(),
-                () -> ++count[0] < 4
-                    ? Order.getAvroOrders(15) 
-                    : Collections.emptyList()
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally { System.out.println(); }
-    }*/
-
-    @Test
-    @org.junit.jupiter.api.Order(2)
-    void testWriteAndIndex() {
-        System.out.println("[begin:testWriteAndIndex]");
-
-        GenericIndexHelper indexHelper = null;
-        boolean indexingAvailable = true;
-
-        try {
-            // Initialize index helper (sidecar)
-            indexHelper = new GenericIndexHelper(Paths.get("order-indexer"));
-            indexHelper.open();
-        } catch (Exception e) {
-            System.err.println("Index helper failed to initialize: " + e.getMessage());
-            indexingAvailable = false;
-        }
-
-        try {
-            AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob");
-            String location = strategy.getJobParams().getNaming();
-            AtomicBoolean alreadyRun = new AtomicBoolean(false);
-            AtomicReference<List<OrderAvro>> writtenOrders = new AtomicReference<>();
-
-            // Supplier to provide records (not index yet)
-            Supplier<List<OrderAvro>> indexAwareSupplier = () -> {
-                if (alreadyRun.getAndSet(true)) {
-                    return Collections.emptyList(); // terminate
-                }
-                List<OrderAvro> orders = Order.getAvroOrders(5);
-                writtenOrders.set(orders); // capture for later indexing
-                return orders;
-            };
-
-            // Try to write records
-            strategy.write(OrderAvro.getClassSchema(), indexAwareSupplier);
-
-            // Index only after successful write
-            if (indexingAvailable) {
-                List<OrderAvro> ordersToIndex = writtenOrders.get();
-                if (ordersToIndex != null) {
-                    for (OrderAvro order : ordersToIndex) {
-                        try {
-                            indexHelper.indexRecord(order.getOrderId().toString(), location);
-                        } catch (Exception ex) {
-                            System.err.println("Failed to index orderId " + order.getOrderId() + ": " + ex.getMessage());
-                            // Optionally continue or throw depending on severity
-                        }
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (indexingAvailable && indexHelper != null) {
-                try {
-                    indexHelper.close();
-                } catch (Exception ex) {
-                    System.err.println("Failed to close index helper: " + ex.getMessage());
-                }
-            }
-            System.out.println();
-        }
-    }
-
-
-    @Test
-    @org.junit.jupiter.api.Order(3)
-    void testFindOrderFromIndexEntry() {
-        System.out.println("[begin:testFindOrderFromIndexEntry]");
-
-        final String orderIdToSearch = "ORDER-51*"; // Adjust as needed
-
-        try (GenericIndexHelper indexHelper = new GenericIndexHelper(Paths.get("order-indexer"))) {
-            indexHelper.open();
-
-            // Step 1: Find index matches by orderId pattern
-            List<MatchResult> matches = indexHelper.findLocationsForIndex(orderIdToSearch);
-
-            if (matches.isEmpty()) {
-                System.out.println("No index entries found for: " + orderIdToSearch);
-                return;
-            }
-
-            for (MatchResult match : matches) {
-                String location = match.getLocation();  // Assuming getLocation() method
-                String index = match.getIndex();        // If useful
-
-                System.out.println("Found index: " + index + ", file: " + location);
-
-                AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>(location);
-
-                // Step 2: Search the Avro file for matching orderId
-                strategy.findMatchingRecords(
-                    OrderAvro.class,
-                    order -> index.equals(order.getOrderId().toString()),
-                    order -> {
-                        System.out.println("Matched order: " + order);
-                        return true;  // continue searching if desired
-                    }
-                );
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
+ 
    @Test
     void testBatchedRead() {
         try {
@@ -244,47 +110,6 @@ class AvroApplicationArchiverTests {
             e.printStackTrace();
         }
     }
-    
-
-    /*@Test
-    @org.junit.jupiter.api.Order(2)
-    void testWriteAndIndex() {
-        System.out.println("[begin:testWriteAndIndex]");
-
-        try (GenericIndexHelper indexHelper = new GenericIndexHelper(Paths.get("order-indexer"))) {
-            
-            indexHelper.open();
-
-            AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob");
-            String location = strategy.getJobParams().getNaming();
-            AtomicBoolean alreadyRun = new AtomicBoolean(false);
-
-            Supplier<List<OrderAvro>> indexAwareSupplier = () -> {
-
-                if (alreadyRun.getAndSet(true)) {
-                    return Collections.emptyList(); // terminate
-                }
-
-                List<OrderAvro> orders = Order.getAvroOrders(5);
-                for (OrderAvro order : orders) {
-                    try {
-                        indexHelper.indexRecord(order.getOrderId().toString(), location);
-                    } catch (Exception e) {
-                        System.err.println("Failed to index orderId " + order.getOrderId());
-                        throw new RuntimeException("Indexing failed", e);
-                    }
-                }
-                return orders;
-            };
-
-            strategy.write(OrderAvro.getClassSchema(), indexAwareSupplier);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            System.out.println();
-        }
-    }*/
 
 
     @Test
@@ -352,7 +177,176 @@ class AvroApplicationArchiverTests {
         }
     }
 
+   /*@Test
+    @org.junit.jupiter.api.Order(1)
+    void testWrite() {
+        try {
+            System.out.println("[begin:testWrite]");            
+            AvroFileSystemStrategy<OrderAvro> strategy =
+                new AvroFileSystemStrategy<>("OrderJob");
 
+            final int[] count = {0};
+
+            strategy.write(
+                OrderAvro.getClassSchema(),
+                () -> ++count[0] < 4
+                    ? Order.getAvroOrders(15) 
+                    : Collections.emptyList()
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally { System.out.println(); }
+    }*/
+
+    /* @Test
+    @org.junit.jupiter.api.Order(2)
+    void testWriteAndIndex() {
+        System.out.println("[begin:testWriteAndIndex]");
+
+        GenericIndexHelper indexHelper = null;
+        boolean indexingAvailable = true;
+
+        try {
+            // Initialize index helper (sidecar)
+            indexHelper = new GenericIndexHelper(Paths.get("order-indexer"));
+            indexHelper.open();
+        } catch (Exception e) {
+            System.err.println("Index helper failed to initialize: " + e.getMessage());
+            indexingAvailable = false;
+        }
+
+        try {
+            AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob");
+            String location = strategy.getJobParams().getNaming();
+            AtomicBoolean alreadyRun = new AtomicBoolean(false);
+            AtomicReference<List<OrderAvro>> writtenOrders = new AtomicReference<>();
+
+            // Supplier to provide records (not index yet)
+            Supplier<List<OrderAvro>> indexAwareSupplier = () -> {
+                if (alreadyRun.getAndSet(true)) {
+                    return Collections.emptyList(); // terminate
+                }
+                List<OrderAvro> orders = Order.getAvroOrders(5);
+                writtenOrders.set(orders); // capture for later indexing
+                return orders;
+            };
+
+            // Try to write records
+            strategy.write(OrderAvro.getClassSchema(), indexAwareSupplier);
+
+            // Index only after successful write
+            if (indexingAvailable) {
+                List<OrderAvro> ordersToIndex = writtenOrders.get();
+                if (ordersToIndex != null) {
+                    for (OrderAvro order : ordersToIndex) {
+                        try {
+                            indexHelper.indexRecord(order.getOrderId().toString(), location);
+                        } catch (Exception ex) {
+                            System.err.println("Failed to index orderId " + order.getOrderId() + ": " + ex.getMessage());
+                            // Optionally continue or throw depending on severity
+                        }
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (indexingAvailable && indexHelper != null) {
+                try {
+                    indexHelper.close();
+                } catch (Exception ex) {
+                    System.err.println("Failed to close index helper: " + ex.getMessage());
+                }
+            }
+            System.out.println();
+        }
+    }*/
+
+/* 
+    @Test
+    @org.junit.jupiter.api.Order(3)
+    void testFindOrderFromIndexEntry() {
+        System.out.println("[begin:testFindOrderFromIndexEntry]");
+
+        final String orderIdToSearch = "ORDER-51*"; // Adjust as needed
+
+        try (GenericIndexHelper indexHelper = new GenericIndexHelper(Paths.get("order-indexer"))) {
+            indexHelper.open();
+
+            // Step 1: Find index matches by orderId pattern
+            List<MatchResult> matches = indexHelper.findLocationsForIndex(orderIdToSearch);
+
+            if (matches.isEmpty()) {
+                System.out.println("No index entries found for: " + orderIdToSearch);
+                return;
+            }
+
+            for (MatchResult match : matches) {
+                String location = match.getLocation();  // Assuming getLocation() method
+                String index = match.getIndex();        // If useful
+
+                System.out.println("Found index: " + index + ", file: " + location);
+
+                AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>(location);
+
+                // Step 2: Search the Avro file for matching orderId
+                strategy.findMatchingRecords(
+                    OrderAvro.class,
+                    order -> index.equals(order.getOrderId().toString()),
+                    order -> {
+                        System.out.println("Matched order: " + order);
+                        return true;  // continue searching if desired
+                    }
+                );
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+*/
+
+    /*@Test
+    @org.junit.jupiter.api.Order(2)
+    void testWriteAndIndex() {
+        System.out.println("[begin:testWriteAndIndex]");
+
+        try (GenericIndexHelper indexHelper = new GenericIndexHelper(Paths.get("order-indexer"))) {
+            
+            indexHelper.open();
+
+            AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob");
+            String location = strategy.getJobParams().getNaming();
+            AtomicBoolean alreadyRun = new AtomicBoolean(false);
+
+            Supplier<List<OrderAvro>> indexAwareSupplier = () -> {
+
+                if (alreadyRun.getAndSet(true)) {
+                    return Collections.emptyList(); // terminate
+                }
+
+                List<OrderAvro> orders = Order.getAvroOrders(5);
+                for (OrderAvro order : orders) {
+                    try {
+                        indexHelper.indexRecord(order.getOrderId().toString(), location);
+                    } catch (Exception e) {
+                        System.err.println("Failed to index orderId " + order.getOrderId());
+                        throw new RuntimeException("Indexing failed", e);
+                    }
+                }
+                return orders;
+            };
+
+            strategy.write(OrderAvro.getClassSchema(), indexAwareSupplier);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            System.out.println();
+        }
+    }*/
+    
     /*@Test
     @org.junit.jupiter.api.Order(2)
     void testWriteAndIndexLambda() {
