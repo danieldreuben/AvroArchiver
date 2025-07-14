@@ -1,5 +1,4 @@
-package com.ross.excel.serializer;
-
+package com.ross.serializer;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

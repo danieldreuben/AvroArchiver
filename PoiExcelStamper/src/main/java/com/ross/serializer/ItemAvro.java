@@ -3,7 +3,7 @@
  *
  * DO NOT EDIT DIRECTLY
  */
-package com.ross.excel.serializer;
+package com.ross.serializer;
 
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.specific.SpecificData;
@@ -14,10 +14,10 @@ import org.apache.avro.message.SchemaStore;
 
 @org.apache.avro.specific.AvroGenerated
 public class ItemAvro extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = -5833573031884057374L;
+  private static final long serialVersionUID = -1655813775648799312L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ItemAvro\",\"namespace\":\"com.ross.excel.serializer\",\"fields\":[{\"name\":\"sku\",\"type\":\"string\"},{\"name\":\"quantity\",\"type\":\"int\"},{\"name\":\"price\",\"type\":\"double\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ItemAvro\",\"namespace\":\"com.ross.serializer\",\"fields\":[{\"name\":\"sku\",\"type\":\"string\"},{\"name\":\"quantity\",\"type\":\"int\"},{\"name\":\"price\",\"type\":\"double\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
@@ -180,8 +180,8 @@ public class ItemAvro extends org.apache.avro.specific.SpecificRecordBase implem
    * Creates a new ItemAvro RecordBuilder.
    * @return A new ItemAvro RecordBuilder
    */
-  public static com.ross.excel.serializer.ItemAvro.Builder newBuilder() {
-    return new com.ross.excel.serializer.ItemAvro.Builder();
+  public static com.ross.serializer.ItemAvro.Builder newBuilder() {
+    return new com.ross.serializer.ItemAvro.Builder();
   }
 
   /**
@@ -189,11 +189,11 @@ public class ItemAvro extends org.apache.avro.specific.SpecificRecordBase implem
    * @param other The existing builder to copy.
    * @return A new ItemAvro RecordBuilder
    */
-  public static com.ross.excel.serializer.ItemAvro.Builder newBuilder(com.ross.excel.serializer.ItemAvro.Builder other) {
+  public static com.ross.serializer.ItemAvro.Builder newBuilder(com.ross.serializer.ItemAvro.Builder other) {
     if (other == null) {
-      return new com.ross.excel.serializer.ItemAvro.Builder();
+      return new com.ross.serializer.ItemAvro.Builder();
     } else {
-      return new com.ross.excel.serializer.ItemAvro.Builder(other);
+      return new com.ross.serializer.ItemAvro.Builder(other);
     }
   }
 
@@ -202,11 +202,11 @@ public class ItemAvro extends org.apache.avro.specific.SpecificRecordBase implem
    * @param other The existing instance to copy.
    * @return A new ItemAvro RecordBuilder
    */
-  public static com.ross.excel.serializer.ItemAvro.Builder newBuilder(com.ross.excel.serializer.ItemAvro other) {
+  public static com.ross.serializer.ItemAvro.Builder newBuilder(com.ross.serializer.ItemAvro other) {
     if (other == null) {
-      return new com.ross.excel.serializer.ItemAvro.Builder();
+      return new com.ross.serializer.ItemAvro.Builder();
     } else {
-      return new com.ross.excel.serializer.ItemAvro.Builder(other);
+      return new com.ross.serializer.ItemAvro.Builder(other);
     }
   }
 
@@ -230,7 +230,7 @@ public class ItemAvro extends org.apache.avro.specific.SpecificRecordBase implem
      * Creates a Builder by copying an existing Builder.
      * @param other The existing Builder to copy.
      */
-    private Builder(com.ross.excel.serializer.ItemAvro.Builder other) {
+    private Builder(com.ross.serializer.ItemAvro.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.sku)) {
         this.sku = data().deepCopy(fields()[0].schema(), other.sku);
@@ -250,7 +250,7 @@ public class ItemAvro extends org.apache.avro.specific.SpecificRecordBase implem
      * Creates a Builder by copying an existing ItemAvro instance
      * @param other The existing instance to copy.
      */
-    private Builder(com.ross.excel.serializer.ItemAvro other) {
+    private Builder(com.ross.serializer.ItemAvro other) {
       super(SCHEMA$, MODEL$);
       if (isValidValue(fields()[0], other.sku)) {
         this.sku = data().deepCopy(fields()[0].schema(), other.sku);
@@ -280,7 +280,7 @@ public class ItemAvro extends org.apache.avro.specific.SpecificRecordBase implem
       * @param value The value of 'sku'.
       * @return This builder.
       */
-    public com.ross.excel.serializer.ItemAvro.Builder setSku(java.lang.CharSequence value) {
+    public com.ross.serializer.ItemAvro.Builder setSku(java.lang.CharSequence value) {
       validate(fields()[0], value);
       this.sku = value;
       fieldSetFlags()[0] = true;
@@ -300,7 +300,7 @@ public class ItemAvro extends org.apache.avro.specific.SpecificRecordBase implem
       * Clears the value of the 'sku' field.
       * @return This builder.
       */
-    public com.ross.excel.serializer.ItemAvro.Builder clearSku() {
+    public com.ross.serializer.ItemAvro.Builder clearSku() {
       sku = null;
       fieldSetFlags()[0] = false;
       return this;
@@ -320,7 +320,7 @@ public class ItemAvro extends org.apache.avro.specific.SpecificRecordBase implem
       * @param value The value of 'quantity'.
       * @return This builder.
       */
-    public com.ross.excel.serializer.ItemAvro.Builder setQuantity(int value) {
+    public com.ross.serializer.ItemAvro.Builder setQuantity(int value) {
       validate(fields()[1], value);
       this.quantity = value;
       fieldSetFlags()[1] = true;
@@ -340,7 +340,7 @@ public class ItemAvro extends org.apache.avro.specific.SpecificRecordBase implem
       * Clears the value of the 'quantity' field.
       * @return This builder.
       */
-    public com.ross.excel.serializer.ItemAvro.Builder clearQuantity() {
+    public com.ross.serializer.ItemAvro.Builder clearQuantity() {
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -359,7 +359,7 @@ public class ItemAvro extends org.apache.avro.specific.SpecificRecordBase implem
       * @param value The value of 'price'.
       * @return This builder.
       */
-    public com.ross.excel.serializer.ItemAvro.Builder setPrice(double value) {
+    public com.ross.serializer.ItemAvro.Builder setPrice(double value) {
       validate(fields()[2], value);
       this.price = value;
       fieldSetFlags()[2] = true;
@@ -379,7 +379,7 @@ public class ItemAvro extends org.apache.avro.specific.SpecificRecordBase implem
       * Clears the value of the 'price' field.
       * @return This builder.
       */
-    public com.ross.excel.serializer.ItemAvro.Builder clearPrice() {
+    public com.ross.serializer.ItemAvro.Builder clearPrice() {
       fieldSetFlags()[2] = false;
       return this;
     }

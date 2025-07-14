@@ -1,4 +1,4 @@
-package com.ross.excel.serializer;
+package com.ross.serializer;
 
 public class Item {
     private String sku;

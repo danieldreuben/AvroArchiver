@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "OrderAvro",
-  "namespace": "com.ross.excel.serializer",
+  "namespace": "com.ross.serializer",
   "fields": [
     { "name": "orderId", "type": "string" },
     { "name": "shipping", "type": "double"},

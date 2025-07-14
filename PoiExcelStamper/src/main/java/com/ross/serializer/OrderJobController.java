@@ -1,8 +1,9 @@
-package com.ross.excel.serializer;
+package com.ross.serializer;
 
 import java.util.ArrayList;
 
-import com.ross.excel.serializer.archiver.AvroFileSystemStrategy;
+import com.ross.serializer.OrderAvro;
+import com.ross.serializer.stategy.AvroFileSystemStrategy;
 
 
 public class OrderJobController {

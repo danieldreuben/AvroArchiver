@@ -1,4 +1,4 @@
-package com.ross.excel.serializer;
+package com.ross.serializer;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+
+import com.ross.serializer.ItemAvro;
+import com.ross.serializer.OrderAvro;
 
 public class Order {
     private String orderId;

@@ -1,4 +1,4 @@
-package com.ross.excel.serializer.archiver;
+package com.ross.serializer.stategy;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
