@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import org.apache.avro.Schema;
 import org.apache.avro.file.SeekableFileInput;
 import org.apache.avro.file.SeekableInput;
+import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecord;
 
 
@@ -82,7 +83,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
             e.printStackTrace();
             throw e;
         }
-    }
+    } 
 
     /*@Override
     public <T extends SpecificRecord> void write(
