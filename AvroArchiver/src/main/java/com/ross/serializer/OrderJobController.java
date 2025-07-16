@@ -8,14 +8,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
+import org.springframework.stereotype.Component;
+
 import com.ross.serializer.stategy.AvroFileSystemStrategy;
 import com.ross.serializer.stategy.GenericIndexHelper;
 import com.ross.serializer.stategy.GenericIndexHelper.MatchResult;
 
-
+@Component
 public class OrderJobController {
 
     public OrderJobController() {} 
+
+    public void run() {
+        System.out.println("Running scheduled task...");
+        testWriteAndIndex();
+    }
 
     void testWriteOrders()  {
         try {
@@ -49,9 +56,9 @@ public class OrderJobController {
     }
 
     void testFindOrderFromIndexEntry() {
-        System.out.println("[begin:testFindOrderFromIndexEntry]");
 
         final String orderIdToSearch = "ORDER-51*"; // Adjust as needed
+        System.out.println("[begin:testFindOrderFromIndexEntry]");
 
         try (GenericIndexHelper indexHelper = new GenericIndexHelper(Paths.get("order-indexer"))) {
             indexHelper.open();
@@ -89,10 +96,9 @@ public class OrderJobController {
     }
 
     void testWriteAndIndex() {
-        System.out.println("[begin:testWriteAndIndex]");
-
         GenericIndexHelper indexHelper = null;
         boolean indexingAvailable = true;
+        System.out.println("[begin:testWriteAndIndex]");
 
         try {
             // Initialize index helper (sidecar)

@@ -48,7 +48,7 @@ class AvroApplicationArchiverTests {
         }
     }
 
-  @Test
+    @Test
     void testRead() {
         try {
             System.out.println("[begin:testRead]");            
@@ -92,7 +92,7 @@ class AvroApplicationArchiverTests {
     }    
 
  
-   @Test
+    @Test
     void testBatchedRead() {
         try {
             System.out.println("[begin:testBatchedRead]");

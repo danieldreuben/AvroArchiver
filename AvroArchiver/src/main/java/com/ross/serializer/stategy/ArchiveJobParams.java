@@ -41,6 +41,7 @@ public class ArchiveJobParams {
             }                   
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             String fullPath = job + ".yaml";
+            System.out.println(">>>"+fullPath);
             ArchiveJobParams config = mapper.readValue(new File(fullPath), ArchiveJobParams.class);
           
             return config;    
