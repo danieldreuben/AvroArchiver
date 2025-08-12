@@ -95,67 +95,71 @@ public class OrderJobController {
         }
     }
 
-    void testWriteAndIndex() {
-        GenericIndexHelper indexHelper = null;
-        boolean indexingAvailable = true;
-        System.out.println("[begin:testWriteAndIndex]");
+   void testWriteAndIndex() {
+    // mutable holders so lambda can reference them
+    AtomicReference<GenericIndexHelper> indexHelperRef = new AtomicReference<>();
+    AtomicBoolean indexingAvailable = new AtomicBoolean(true);
 
-        try {
-            // Initialize index helper (sidecar)
-            indexHelper = new GenericIndexHelper(Paths.get("order-indexer"));
-            indexHelper.open();
-        } catch (Exception e) {
-            System.err.println("Index helper failed to initialize: " + e.getMessage());
-            indexingAvailable = false;
-        }
+    System.out.println("[begin:testWriteAndIndex]");
 
-        try {
-            AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob");
-            String location = strategy.getJobParams().getNaming();
-            AtomicBoolean alreadyRun = new AtomicBoolean(false);
-            AtomicReference<List<OrderAvro>> writtenOrders = new AtomicReference<>();
+    try {
+        // Initialize index helper (sidecar)
+        GenericIndexHelper ih = new GenericIndexHelper(Paths.get("order-indexer"));
+        ih.open();
+        indexHelperRef.set(ih);
+    } catch (Exception e) {
+        System.err.println("Index helper failed to initialize: " + e.getMessage());
+        indexingAvailable.set(false);
+    }
 
-            // Supplier to provide records (not index yet)
-            Supplier<List<OrderAvro>> indexAwareSupplier = () -> {
-                if (alreadyRun.getAndSet(true)) {
-                    return Collections.emptyList(); // terminate
-                }
-                List<OrderAvro> orders = Order.getAvroOrders(5);
-                writtenOrders.set(orders); // capture for later indexing
-                return orders;
-            };
+    try {
+        AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob");
+        String location = strategy.getJobParams().getNaming();
+        AtomicBoolean alreadyRun = new AtomicBoolean(false);
 
-            // Try to write records
-            strategy.write(OrderAvro.getClassSchema(), indexAwareSupplier);
+        // Supplier that both produces and indexes (indexes only if indexingAvailable)
+        Supplier<List<OrderAvro>> indexAwareSupplier = () -> {
+            if (alreadyRun.getAndSet(true)) {
+                return Collections.emptyList(); // terminate
+            }
 
-            // Index only after successful write
-            if (indexingAvailable) {
-                List<OrderAvro> ordersToIndex = writtenOrders.get();
-                if (ordersToIndex != null) {
-                    for (OrderAvro order : ordersToIndex) {
+            List<OrderAvro> orders = Order.getAvroOrders(5);
+
+            if (indexingAvailable.get()) {
+                GenericIndexHelper ih = indexHelperRef.get();
+                if (ih != null) {
+                    for (OrderAvro order : orders) {
                         try {
-                            indexHelper.indexRecord(order.getOrderId().toString(), location);
+                            ih.indexRecord(order.getOrderId().toString(), location);
                         } catch (Exception ex) {
                             System.err.println("Failed to index orderId " + order.getOrderId() + ": " + ex.getMessage());
-                            // Optionally continue or throw depending on severity
                         }
                     }
                 }
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (indexingAvailable && indexHelper != null) {
-                try {
-                    indexHelper.close();
-                } catch (Exception ex) {
-                    System.err.println("Failed to close index helper: " + ex.getMessage());
-                }
+            return orders;
+        };
+
+        // Write using the supplier (also triggers indexing)
+        strategy.write(OrderAvro.getClassSchema(), indexAwareSupplier);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    } finally {
+        GenericIndexHelper ih = indexHelperRef.get();
+        if (indexingAvailable.get() && ih != null) {
+            try {
+                ih.close();
+            } catch (Exception ex) {
+                System.err.println("Failed to close index helper: " + ex.getMessage());
             }
-            System.out.println();
         }
+        System.out.println();
     }
+}
+
+    
     /*public void setRecordsFromArchive(List<SpecificRecord> t) {
 
         List<OrderAvro> orderList = t.stream()
