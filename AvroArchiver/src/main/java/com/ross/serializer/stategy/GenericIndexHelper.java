@@ -13,6 +13,51 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Provides a generic, lightweight helper for creating, updating, and querying
+ * a Lucene index to enable fast lookup of Avro file locations or other resources
+ * based on a searchable key.
+ * <p>
+ * This class is intended to act as a sidecar indexing utility for serialized
+ * data files (e.g., Avro archives), allowing:
+ * <ul>
+ *   <li>Efficient creation and maintenance of an on-disk Lucene index.</li>
+ *   <li>Indexing of key-to-location mappings for quick retrieval.</li>
+ *   <li>Support for both exact and wildcard queries over indexed keys.</li>
+ *   <li>Timestamp storage for each indexed entry for auditing or recency checks.</li>
+ * </ul>
+ * </p>
+ *
+ * <h3>Usage Example:</h3>
+ * <pre>{@code
+ * Path indexPath = Paths.get("/tmp/order-index");
+ * try (GenericIndexHelper indexHelper = new GenericIndexHelper(indexPath)) {
+ *     indexHelper.open();
+ *     indexHelper.indexAndCommit("ORDER-12345", "/data/orders/order-12345.avro");
+ *
+ *     List<GenericIndexHelper.MatchResult> results =
+ *         indexHelper.findLocationsForIndex("ORDER-12345");
+ *     results.forEach(System.out::println);
+ * }
+ * }</pre>
+ *
+ * <p>
+ * This helper uses a {@link StandardAnalyzer} for text analysis and supports
+ * wildcard searches via Lucene’s {@link WildcardQuery}. It is designed to be
+ * opened once, reused for multiple operations, and closed when no longer needed.
+ * </p>
+ *
+ * <h3>Thread Safety:</h3>
+ * This class is <strong>not</strong> thread-safe. If used concurrently from multiple
+ * threads, synchronization must be handled externally.
+ * </h3>
+ *
+ * @author 
+ * @see org.apache.lucene.index.IndexWriter
+ * @see org.apache.lucene.index.DirectoryReader
+ * @see org.apache.lucene.search.IndexSearcher
+ */
+
 public class GenericIndexHelper implements Closeable {
     private final Path indexPath;
     private Directory directory;

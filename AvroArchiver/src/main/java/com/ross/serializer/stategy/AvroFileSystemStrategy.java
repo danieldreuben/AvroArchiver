@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 import org.apache.avro.Schema;
 import org.apache.avro.file.SeekableFileInput;
 import org.apache.avro.file.SeekableInput;
-import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecord;
 
 

@@ -1,7 +1,7 @@
 job:
   description: "Daily job to archive orders in weekly file"
   archiveNamingScheme: WEEKLY                                   # Options: DAILY, WEEKLY, MONTHLY, etc.
-  fileName: "order-archive.avro"
+  fileName: "order-archive.avro"                                # Ex: w/naming scheme - order-archive-2025W22.avro"
   deflate: 9                                                    # Compression level: 0 (off) to 9 (max)
   batchRead: 5                                                  # Records per batch read
 
