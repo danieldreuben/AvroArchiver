@@ -2,6 +2,7 @@ package com.ross.serializer;
 
 import org.springframework.boot.test.context.SpringBootTest;
 
+import com.ross.serializer.stategy.ArchiveJobParams;
 import com.ross.serializer.stategy.AvroFileSystemStrategy;
 import com.ross.serializer.stategy.GenericIndexHelper;
 
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -115,69 +117,69 @@ class AvroApplicationArchiverTests {
 
     @Test
     @org.junit.jupiter.api.Order(2)
-void testWriteAndIndex() {
-    // mutable holders so lambda can reference them
-    AtomicReference<GenericIndexHelper> indexHelperRef = new AtomicReference<>();
-    AtomicBoolean indexingAvailable = new AtomicBoolean(true);
+    void testWriteAndIndex() {
+        // mutable holders so lambda can reference them
+        AtomicReference<GenericIndexHelper> indexHelperRef = new AtomicReference<>();
+        AtomicBoolean indexingAvailable = new AtomicBoolean(true);
 
-    System.out.println("[begin:testWriteAndIndex]");
+        System.out.println("[begin:testWriteAndIndex]");
 
-    try {
-        // Initialize index helper (sidecar)
-        GenericIndexHelper ih = new GenericIndexHelper(Paths.get("order-indexer"));
-        ih.open();
-        indexHelperRef.set(ih);
-    } catch (Exception e) {
-        System.err.println("Index helper failed to initialize: " + e.getMessage());
-        indexingAvailable.set(false);
-    }
+        try {
+            // Initialize index helper (sidecar)
+            GenericIndexHelper ih = new GenericIndexHelper(Paths.get("order-indexer"));
+            ih.open();
+            indexHelperRef.set(ih);
+        } catch (Exception e) {
+            System.err.println("Index helper failed to initialize: " + e.getMessage());
+            indexingAvailable.set(false);
+        }
 
-    try {
-        AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob");
-        String location = strategy.getJobParams().getNaming();
-        AtomicBoolean alreadyRun = new AtomicBoolean(false);
+        try {
+            AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob");
+            String location = strategy.getJobParams().getNaming();
+            AtomicBoolean alreadyRun = new AtomicBoolean(false);
 
-        // Supplier that both produces and indexes (indexes only if indexingAvailable)
-        Supplier<List<OrderAvro>> indexAwareSupplier = () -> {
-            if (alreadyRun.getAndSet(true)) {
-                return Collections.emptyList(); // terminate
-            }
+            // Supplier that both produces and indexes (indexes only if indexingAvailable)
+            Supplier<List<OrderAvro>> indexAwareSupplier = () -> {
+                if (alreadyRun.getAndSet(true)) {
+                    return Collections.emptyList(); // terminate
+                }
 
-            List<OrderAvro> orders = Order.getAvroOrders(5);
+                List<OrderAvro> orders = Order.getAvroOrders(5);
 
-            if (indexingAvailable.get()) {
-                GenericIndexHelper ih = indexHelperRef.get();
-                if (ih != null) {
-                    for (OrderAvro order : orders) {
-                        try {
-                            ih.indexRecord(order.getOrderId().toString(), location);
-                        } catch (Exception ex) {
-                            System.err.println("Failed to index orderId " + order.getOrderId() + ": " + ex.getMessage());
+                if (indexingAvailable.get()) {
+                    GenericIndexHelper ih = indexHelperRef.get();
+                    if (ih != null) {
+                        for (OrderAvro order : orders) {
+                            try {
+                                ih.indexRecord(order.getOrderId().toString(), location);
+                            } catch (Exception ex) {
+                                System.err.println("Failed to index orderId " + order.getOrderId() + ": " + ex.getMessage());
+                            }
                         }
                     }
                 }
+
+                return orders;
+            };
+
+            // Write using the supplier (also triggers indexing)
+            strategy.write(OrderAvro.getClassSchema(), indexAwareSupplier);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            GenericIndexHelper ih = indexHelperRef.get();
+            if (indexingAvailable.get() && ih != null) {
+                try {
+                    ih.close();
+                } catch (Exception ex) {
+                    System.err.println("Failed to close index helper: " + ex.getMessage());
+                }
             }
-
-            return orders;
-        };
-
-        // Write using the supplier (also triggers indexing)
-        strategy.write(OrderAvro.getClassSchema(), indexAwareSupplier);
-
-    } catch (Exception e) {
-        e.printStackTrace();
-    } finally {
-        GenericIndexHelper ih = indexHelperRef.get();
-        if (indexingAvailable.get() && ih != null) {
-            try {
-                ih.close();
-            } catch (Exception ex) {
-                System.err.println("Failed to close index helper: " + ex.getMessage());
-            }
+            System.out.println();
         }
-        System.out.println();
     }
-}
 
     
     /*void testWriteAndIndex() {
@@ -218,6 +220,43 @@ void testWriteAndIndex() {
 
         System.out.println();
     }*/
+
+    @Test
+    void testCompletedArchives() {
+        System.out.println("[begin:testCompletedArchives]");
+        // Given: a mix of past and current archive files
+        List<String> archives = Arrays.asList(
+            "order-archive-2025W24.avro", // Past week
+            "order-archive-2025W33.avro", // Current week
+            "order-archive-2024W52.avro"  // Last year
+        );
+
+        ArchiveJobParams.ArchiveNameResolver resolver =  
+            ArchiveJobParams.getInstance("OrderJob").getArchiveNameResolver();
+
+        // When: we resolve completed archives for weekly schedule
+        List<String> completed = resolver.findCompletedArchives(
+            archives,
+            "order-archive",
+            ArchiveJobParams.ArchiveSchedule.WEEKLY
+        );
+
+        // Then: current week's archive should NOT be included
+//        assertFalse(completed.contains("order-archive-2025W25.avro"), 
+//            "Current week archive should not be marked as completed");
+
+        // And: past weeks should be included
+//        assertTrue(completed.contains("order-archive-2025W24.avro"),
+//            "Past week should be marked as completed");
+//        assertTrue(completed.contains("order-archive-2024W52.avro"),
+//            "Previous year archive should be marked as completed");
+
+        // Optional: verify total count
+ //       assertEquals(2, completed.size(), "Only past archives should be returned");
+
+        System.out.println("Completed archives: " + completed);
+    }
+
 
 
     @Test

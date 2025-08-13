@@ -4,6 +4,8 @@ package com.ross.serializer.stategy;
 import java.io.File;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -52,6 +54,9 @@ public class ArchiveJobParams {
         return null;
     }
 
+    public ArchiveNameResolver getArchiveNameResolver() {
+        return new ArchiveNameResolver();
+    }
 
     public String getNaming() {
         return (job.archiveNamingScheme == null) ? 
@@ -242,6 +247,51 @@ public class ArchiveJobParams {
             }
 
             return baseName + "-" + suffix + ".avro";
+        }
+
+        public List<String> findCompletedArchives(
+                List<String> archiveNames,
+                String baseName,
+                ArchiveSchedule schedule) {
+
+            ZonedDateTime now = ZonedDateTime.now();
+            List<String> completed = new ArrayList<>();
+
+            // Current period token based on schedule
+            String currentToken;
+            switch (schedule) {
+                case YEARLY:
+                    currentToken = now.format(DateTimeFormatter.ofPattern("uuuu"));
+                    break;
+                case MONTHLY:
+                    currentToken = now.format(DateTimeFormatter.ofPattern("uuuuMM"));
+                    break;
+                case WEEKLY:
+                    currentToken = now.format(DateTimeFormatter.ofPattern("uuuu'W'ww"));
+                    break;
+                case DAILY:
+                    currentToken = now.format(DateTimeFormatter.ofPattern("uuuuMMdd"));
+                    break;
+                case HOURLY:
+                    currentToken = now.format(DateTimeFormatter.ofPattern("uuuuMMdd-HH"));
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported schedule: " + schedule);
+            }
+
+            for (String name : archiveNames) {
+                String periodToken = name
+                        .replace(baseName + "-", "")
+                        .replace(".avro", "")
+                        .trim();
+
+                // If it's not the current period, it's completed
+                if (!periodToken.equals(currentToken)) {
+                    completed.add(name);
+                }
+            }
+
+            return completed;
         }
     }
    
