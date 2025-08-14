@@ -11,6 +11,7 @@ import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.*;
 
@@ -98,4 +99,20 @@ public class AvroBlobStorageStrategy<T extends SpecificRecord> extends AvroStrea
         blobClient.download(output);
         return new SeekableByteArrayInput(output.toByteArray());
     }
+    
+    @Override
+	public boolean put(String name) {
+        return false;
+    }
+
+    @Override
+	public boolean get(String name) {
+        return false;
+    }
+
+    @Override
+    public List<String> getNames(String reference) {
+        return new ArrayList<>();
+    }
+
 }

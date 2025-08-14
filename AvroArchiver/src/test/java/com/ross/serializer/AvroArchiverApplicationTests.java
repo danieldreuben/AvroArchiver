@@ -4,7 +4,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.ross.serializer.stategy.ArchiveJobParams;
 import com.ross.serializer.stategy.AvroFileSystemStrategy;
-import com.ross.serializer.stategy.GenericIndexHelper;
+import com.ross.serializer.stategy.LuceneIndexHelper;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
@@ -119,15 +119,15 @@ class AvroApplicationArchiverTests {
     @org.junit.jupiter.api.Order(2)
     void testWriteAndIndex() {
         // mutable holders so lambda can reference them
-        AtomicReference<GenericIndexHelper> indexHelperRef = new AtomicReference<>();
+        AtomicReference<LuceneIndexHelper> indexHelperRef = new AtomicReference<>();
         AtomicBoolean indexingAvailable = new AtomicBoolean(true);
 
         System.out.println("[begin:testWriteAndIndex]");
 
         try {
             // Initialize index helper (sidecar)
-            GenericIndexHelper ih = new GenericIndexHelper(Paths.get("order-indexer"));
-            ih.open();
+            LuceneIndexHelper ih = new LuceneIndexHelper(Paths.get("order-indexer"));
+            //ih.open();
             indexHelperRef.set(ih);
         } catch (Exception e) {
             System.err.println("Index helper failed to initialize: " + e.getMessage());
@@ -148,7 +148,7 @@ class AvroApplicationArchiverTests {
                 List<OrderAvro> orders = Order.getAvroOrders(5);
 
                 if (indexingAvailable.get()) {
-                    GenericIndexHelper ih = indexHelperRef.get();
+                    LuceneIndexHelper ih = indexHelperRef.get();
                     if (ih != null) {
                         for (OrderAvro order : orders) {
                             try {
@@ -169,7 +169,7 @@ class AvroApplicationArchiverTests {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            GenericIndexHelper ih = indexHelperRef.get();
+            LuceneIndexHelper ih = indexHelperRef.get();
             if (indexingAvailable.get() && ih != null) {
                 try {
                     ih.close();
@@ -241,6 +241,10 @@ class AvroApplicationArchiverTests {
             ArchiveJobParams.ArchiveSchedule.WEEKLY
         );
 
+
+        AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob");
+        strategy.put("test");
+
         // Then: current week's archive should NOT be included
 //        assertFalse(completed.contains("order-archive-2025W25.avro"), 
 //            "Current week archive should not be marked as completed");
@@ -257,22 +261,17 @@ class AvroApplicationArchiverTests {
         System.out.println("Completed archives: " + completed);
     }
 
-
-
     @Test
     void testLucerneIndex() {
         System.out.println("[begin:testLucerneIndex]");
 
-        try (GenericIndexHelper helper = new GenericIndexHelper(Paths.get("order-indexer"))) {
-            helper.open(); // or move this logic into the constructor
-            
+        try (LuceneIndexHelper helper = new LuceneIndexHelper(Paths.get("order-indexer"))) {
+            //helper.open(); // or move this logic into the constructor       
             helper.indexAndCommit("myTestKey", "myTestFile.avro");
-
             helper.findLocationsForIndex("myTestKey").forEach(result ->
                 System.out.println("Index: " + result.getIndex() + 
                     ", File: " + result.getLocation())
             );
-
             helper.deleteKeys("myTestKey*");
 
         } catch (Exception e) {

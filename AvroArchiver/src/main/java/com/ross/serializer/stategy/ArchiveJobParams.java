@@ -138,17 +138,17 @@ public class ArchiveJobParams {
     }
 
     public static class Storage {
-        private String type;
+        //private String type;
         private FileStorage file;
         private BlobStorage blob;
 
-        public String getType() {
+        /*public String getType() {
             return type;
         }
 
         public void setType(String type) {
             this.type = type;
-        }
+        }*/
 
         public FileStorage getFile() {
             return file;
@@ -169,7 +169,8 @@ public class ArchiveJobParams {
         public static class FileStorage {
         
             private String baseDir;
-
+            private String archiveDir;
+            
             public String getBaseDir() {
                 return baseDir;
             }
@@ -177,6 +178,13 @@ public class ArchiveJobParams {
             public void setBaseDir(String baseDir) {
                 this.baseDir = baseDir;
             }
+            public String getArchiveDir() {
+                return archiveDir;
+            }
+
+            public void setArchiveDir(String archiveDir) {
+                this.archiveDir = archiveDir;
+            }            
         }
 
         public static class BlobStorage {

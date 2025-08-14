@@ -1,5 +1,7 @@
 package com.ross.serializer.stategy;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
@@ -7,69 +9,36 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.store.*;
 
 import java.io.Closeable;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Provides a generic, lightweight helper for creating, updating, and querying
  * a Lucene index to enable fast lookup of Avro file locations or other resources
  * based on a searchable key.
- * <p>
- * This class is intended to act as a sidecar indexing utility for serialized
- * data files (e.g., Avro archives), allowing:
- * <ul>
- *   <li>Efficient creation and maintenance of an on-disk Lucene index.</li>
- *   <li>Indexing of key-to-location mappings for quick retrieval.</li>
- *   <li>Support for both exact and wildcard queries over indexed keys.</li>
- *   <li>Timestamp storage for each indexed entry for auditing or recency checks.</li>
- * </ul>
- * </p>
- *
- * <h3>Usage Example:</h3>
- * <pre>{@code
- * Path indexPath = Paths.get("/tmp/order-index");
- * try (GenericIndexHelper indexHelper = new GenericIndexHelper(indexPath)) {
- *     indexHelper.open();
- *     indexHelper.indexAndCommit("ORDER-12345", "/data/orders/order-12345.avro");
- *
- *     List<GenericIndexHelper.MatchResult> results =
- *         indexHelper.findLocationsForIndex("ORDER-12345");
- *     results.forEach(System.out::println);
- * }
- * }</pre>
- *
- * <p>
- * This helper uses a {@link StandardAnalyzer} for text analysis and supports
- * wildcard searches via Lucene’s {@link WildcardQuery}. It is designed to be
- * opened once, reused for multiple operations, and closed when no longer needed.
- * </p>
- *
- * <h3>Thread Safety:</h3>
- * This class is <strong>not</strong> thread-safe. If used concurrently from multiple
- * threads, synchronization must be handled externally.
- * </h3>
- *
- * @author 
- * @see org.apache.lucene.index.IndexWriter
- * @see org.apache.lucene.index.DirectoryReader
- * @see org.apache.lucene.search.IndexSearcher
  */
+public class LuceneIndexHelper implements Closeable, IndexerPlugin {
+    protected final Path indexPath;
+    protected Directory directory;
+    protected IndexWriter indexWriter;
+    protected IndexReader reader;
 
-public class GenericIndexHelper implements Closeable {
-    private final Path indexPath;
-    private Directory directory;
-    private IndexWriter indexWriter;
-    private IndexReader reader;
-
-    public GenericIndexHelper(Path indexPath) throws IOException {
+    public LuceneIndexHelper(Path indexPath) throws IOException {
         this.indexPath = indexPath;
-        this.directory = FSDirectory.open(indexPath);
+        //this.directory = FSDirectory.open(indexPath);
+        open(indexPath);
     }
 
-    public void open() throws IOException {
+    @Override
+    public void open(Path indexPath) throws IOException {
         if (indexWriter != null && indexWriter.isOpen()) {
             System.out.println("IndexWriter already open: " + indexPath);
             return;
@@ -89,15 +58,11 @@ public class GenericIndexHelper implements Closeable {
                 ? IndexWriterConfig.OpenMode.APPEND
                 : IndexWriterConfig.OpenMode.CREATE);
 
-        System.out.println("-->sidecar: Lucerne index at: " + indexPath);
+        System.out.println("-->sidecar: Lucene index at: " + indexPath);
         indexWriter = new IndexWriter(directory, config);
     }
 
-    public void indexAndCommit(String indexKey, String location) throws IOException {
-        indexRecord(indexKey, location);
-        indexWriter.commit();
-    }
-
+    @Override
     public void indexRecord(String indexKey, String location) throws IOException {
         if (indexWriter == null || !indexWriter.isOpen()) {
             throw new IllegalStateException("IndexWriter is not open. Call open() first.");
@@ -112,6 +77,12 @@ public class GenericIndexHelper implements Closeable {
         doc.add(new StoredField("timestamp", Instant.now().toString()));
 
         indexWriter.addDocument(doc);
+    }
+
+    @Override
+    public void indexAndCommit(String indexKey, String location) throws IOException {
+        indexRecord(indexKey, location);
+        indexWriter.commit();
     }
 
     public static class MatchResult {
@@ -137,6 +108,7 @@ public class GenericIndexHelper implements Closeable {
         }
     }
 
+    @Override
     public List<MatchResult> findLocationsForIndex(String indexPattern) throws Exception {
         if (reader != null) {
             reader.close();
@@ -180,6 +152,7 @@ public class GenericIndexHelper implements Closeable {
         return matches;
     }
 
+    @Override
     public void deleteKeys(String indexPattern) throws IOException {
         if (indexWriter == null || !indexWriter.isOpen()) {
             throw new IllegalStateException("IndexWriter is not open. Call open() first.");
@@ -192,6 +165,48 @@ public class GenericIndexHelper implements Closeable {
         System.out.println("Deleted documents matching: " + normalizedPattern);
     }
 
+    @Override
+    public void archiveIndex() throws IOException {
+        archiveDirectoryToTarGz(indexPath.toString());
+    }
+
+    public static void archiveDirectoryToTarGz(String dirPath) throws IOException {
+        Path sourceDir = Paths.get(dirPath);
+        if (!Files.isDirectory(sourceDir)) {
+            throw new IllegalArgumentException("Path is not a directory: " + dirPath);
+        }
+
+        String outputFileName = sourceDir.getFileName().toString() + ".tar.gz";
+        Path outputPath = sourceDir.getParent() != null
+                ? sourceDir.getParent().resolve(outputFileName)
+                : Paths.get(outputFileName);
+
+        try (FileOutputStream fos = new FileOutputStream(outputPath.toFile());
+             GZIPOutputStream gos = new GZIPOutputStream(fos);
+             TarArchiveOutputStream taos = new TarArchiveOutputStream(gos)) {
+
+            taos.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
+
+            Files.walk(sourceDir).forEach(path -> {
+                try {
+                    String relativePath = sourceDir.relativize(path).toString();
+                    if (Files.isDirectory(path)) {
+                        return;
+                    }
+                    TarArchiveEntry entry = new TarArchiveEntry(path.toFile(), relativePath);
+                    taos.putArchiveEntry(entry);
+                    Files.copy(path, taos);
+                    taos.closeArchiveEntry();
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
+
+            taos.finish();
+        }
+
+        System.out.println("Archived " + sourceDir + " to " + outputPath);
+    }
 
     @Override
     public void close() throws IOException {

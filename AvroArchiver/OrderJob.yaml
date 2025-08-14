@@ -9,12 +9,11 @@ indexer:
   name: order-indexer
   method: simple
 
-storage:
-  type: "file"                                                  # Options: "file", "blob"
-  
+storage:                                              
   file:
-    baseDir: "./"                                               # Used if type is "file"
+    baseDir: "./"                                               
+    archiveDir: "archives"
 
   blob:
     endpoint: "https://mystore.blob.core.windows.net"
-    container: "order-archive2"
+    container: "order-archive"

@@ -2,11 +2,16 @@ package com.ross.serializer.stategy;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.SeekableFileInput;
@@ -137,25 +142,79 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         }
     }
 
-   /* public Optional<List<String>> find(String id) {
-        try {
-            return Optional.ofNullable(indexHelper.findLocationsForIndex(id));
-        } catch (Exception e) {
-            System.err.println("Failed to find locations for index [" + id + "]: " + e.getMessage());
-            e.printStackTrace();
-            return Optional.empty();
+    /**
+     * Moves all archived files from the root directory to the archive directory, 
+     * excluding the current archive file.
+     * <p>
+     * Files are identified by their naming format, and any existing files in the 
+     * archive directory with the same name will be overwritten.
+     *
+     * @param name    the current archive file name to exclude from moving
+     * @return {@code true} if all applicable files were moved successfully; 
+     *         {@code false} otherwise
+     */    
+    @Override
+    public boolean put(String name) {
+        String baseDir = jobParams.getStorage().getFile().getBaseDir();
+        String archiveDir = jobParams.getStorage().getFile().getArchiveDir();
+
+        File root = new File(baseDir);
+        List<String> archives = getNames(baseDir);
+
+        // 3. Copy completed archives to archiveDir
+        for (String archiveName : archives) {
+            File source = new File(root, archiveName);
+            File target = new File(archiveDir, archiveName);
+
+            try {
+                Files.createDirectories(target.getParentFile().toPath());
+                Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                System.out.println("Archived: " + archiveName);
+            } catch (IOException e) {
+                System.err.println("Failed to copy " + archiveName + ": " + e.getMessage());
+                return false;
+            }
         }
-    } */
-    /* 
-    public Optional<List<GenericIndexHelper.MatchResult>> indexerFind(String id) {
-        try {
-            List<GenericIndexHelper.MatchResult> results = indexHelper.findLocationsForIndex(id);
-            return results.isEmpty() ? Optional.empty() : Optional.of(results);
-        } catch (Exception e) {
-            System.err.println("Failed to find locations for index [" + id + "]: " + e.getMessage());
-            e.printStackTrace();
-            return Optional.empty();
+
+        return true;
+    }
+
+    private String stripAvroSuffix(String fileName) {
+        return fileName.toLowerCase().endsWith(".avro")
+            ? fileName.substring(0, fileName.length() - 5)
+            : fileName;
+    }
+
+    @Override
+	public boolean get(String name) {
+        return false;
+    }
+
+    @Override
+    public List<String> getNames(String reference) {
+        //String baseDir = jobParams.getStorage().getFile().getBaseDir();
+        String baseName = stripAvroSuffix(jobParams.getJob().getFileName());
+        ArchiveJobParams.ArchiveSchedule schedule = jobParams.getJob().getArchiveNamingScheme();
+
+        ArchiveJobParams.ArchiveNameResolver resolver = jobParams.getArchiveNameResolver();
+        String currentArchive = resolver.resolveAvroArchiveFileName(baseName, schedule);
+
+        // 1. List all archives in baseDir matching the "<baseName>-*.avro" pattern
+        File root = new File(reference);
+        if (!root.exists() || !root.isDirectory()) {
+            System.err.println("Directory not found: " + reference);
+            return new ArrayList<>();
         }
-    } */
+
+        List<String> allArchives = Arrays.stream(
+            root.list((dir, filename) -> 
+                filename.startsWith(baseName + "-") && filename.endsWith(".avro")
+            )
+        ).collect(Collectors.toList());
+
+        // 2. Filter completed archives using your resolver
+        List<String> completedArchives = resolver.findCompletedArchives(allArchives, baseName, schedule);
+        return completedArchives;
+      }
 
 }

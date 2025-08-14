@@ -223,5 +223,9 @@ public interface ArchiverStrategy {
 		Function<T, Boolean> onMatch
 	) throws Exception;
 
+
+	public abstract boolean put(String name);
+	public abstract boolean get(String name);
+	public abstract List<String> getNames(String ref);	
 	public ArchiveJobParams getJobParams();
 }
