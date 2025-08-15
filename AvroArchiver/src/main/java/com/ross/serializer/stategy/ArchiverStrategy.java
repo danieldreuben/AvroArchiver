@@ -13,6 +13,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
 
 public interface ArchiverStrategy {
+
+
 	/**
 	 * Reads records of type {@code T} using the provided Avro {@link Schema}.
 	 * Each record is passed to the specified {@code recordHandler} function.

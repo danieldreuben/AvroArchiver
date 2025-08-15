@@ -3,12 +3,17 @@ package com.ross.serializer.stategy;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Generic interface for an indexer plugin that supports
  * indexing, querying, deleting, and archiving of an index.
  */
-public interface IndexerPlugin {
+public interface IndexerPlugin<T> {
+     
+    String extractKey(T record);
+    void setKeyExtractor(Function<T, String> keyExtractor);
+    void index(T record, ArchiveJobParams params) throws Exception;      
 
     /**
      * Opens or initializes the index at the given path.

@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -25,16 +26,37 @@ import java.util.zip.GZIPOutputStream;
  * a Lucene index to enable fast lookup of Avro file locations or other resources
  * based on a searchable key.
  */
-public class LuceneIndexHelper implements Closeable, IndexerPlugin {
+ 
+public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
+           
     protected final Path indexPath;
     protected Directory directory;
     protected IndexWriter indexWriter;
     protected IndexReader reader;
+    private Function<T, String> keyExtractor;
 
     public LuceneIndexHelper(Path indexPath) throws IOException {
         this.indexPath = indexPath;
         //this.directory = FSDirectory.open(indexPath);
         open(indexPath);
+    }
+
+    @Override
+    public void setKeyExtractor(Function<T, String> keyExtractor) {
+
+        this.keyExtractor = keyExtractor;
+        System.out.println("key-extractor " + this.keyExtractor);
+    }
+
+    @Override
+    public void index(T record, ArchiveJobParams params) throws Exception {
+        if (keyExtractor == null) {
+            throw new IllegalStateException("Key extractor is not set");
+        }
+        String key = keyExtractor.apply(record);
+        indexRecord(key, params.getNaming());
+        //System.out.println("Indexed "+ params.getNaming() +" with key: " + key);
+        System.out.print('i');
     }
 
     @Override
@@ -137,7 +159,7 @@ public class LuceneIndexHelper implements Closeable, IndexerPlugin {
             query = new TermQuery(new Term("index", normalizedPattern));
         }
 
-        TopDocs results = searcher.search(query, 100);
+        TopDocs results = searcher.search(query, 500);
 
         List<MatchResult> matches = new ArrayList<>();
         for (ScoreDoc sd : results.scoreDocs) {
@@ -168,6 +190,10 @@ public class LuceneIndexHelper implements Closeable, IndexerPlugin {
     @Override
     public void archiveIndex() throws IOException {
         archiveDirectoryToTarGz(indexPath.toString());
+    }
+
+    public String extractKey(T record) {
+        return keyExtractor.apply(record);
     }
 
     public static void archiveDirectoryToTarGz(String dirPath) throws IOException {
