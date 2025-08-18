@@ -38,8 +38,10 @@ class AvroApplicationArchiverTests {
                 new AvroFileSystemStrategy<>("OrderJob");
 
             indexer = new LuceneIndexHelper<>(Paths.get("order-indexer"));
-            indexer.setKeyExtractor(record -> record.getOrderId().toString());
+            //indexer.setKeyExtractor(record -> record.getOrderId().toString());
+            indexer.setKeyExtractor(OrderAvro::getOrderId);
             strategy.setIndexer(indexer);
+
 
             AtomicBoolean alreadyRun = new AtomicBoolean(false);
 
@@ -202,7 +204,6 @@ class AvroApplicationArchiverTests {
         }
     }
 
-
     @Test
     void testReadAllOrders()  {
         try {
@@ -252,7 +253,4 @@ class AvroApplicationArchiverTests {
             e.printStackTrace();
         }
     }
-
-
-
 }

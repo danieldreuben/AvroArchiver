@@ -1,5 +1,6 @@
 package com.ross.serializer;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +30,7 @@ public class OrderJobController {
         final String orderIdToSearch = "ORDER-51*"; // Adjust as needed
         System.out.println("[begin:testFindOrderFromIndexEntry]");
 
-        try (LuceneIndexHelper indexHelper = new LuceneIndexHelper(Paths.get("order-indexer"))) {
+        try (LuceneIndexHelper<OrderAvro> indexHelper = new LuceneIndexHelper<>(Paths.get("order-indexer"))) {
             //indexHelper.open();
 
             // Step 1: Find index matches by orderId pattern
@@ -65,15 +66,49 @@ public class OrderJobController {
     }
 
     void testWriteAndIndex() {
+        LuceneIndexHelper<OrderAvro> indexer = null;
+
+        try {
+            System.out.println("[begin:testWrite]");
+
+            AvroFileSystemStrategy<OrderAvro> strategy =
+                new AvroFileSystemStrategy<>("OrderJob");
+
+            indexer = new LuceneIndexHelper<>(Paths.get("order-indexer"));
+            //indexer.setKeyExtractor(record -> record.getOrderId().toString());
+            indexer.setKeyExtractor(OrderAvro::getOrderId);
+            strategy.setIndexer(indexer);
+
+
+            AtomicBoolean alreadyRun = new AtomicBoolean(false);
+
+            strategy.write(
+                OrderAvro.getClassSchema(),
+                () -> alreadyRun.getAndSet(true)
+                    ? Collections.emptyList()
+                    : Order.getAvroOrders(50)
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (indexer != null) {
+                try { indexer.close(); } catch (IOException ignore) {}
+            }            
+            System.out.println();
+        }
+    }    
+
+/* 
+    void testWriteAndIndex() {
         // mutable holders so lambda can reference them
-        AtomicReference<LuceneIndexHelper> indexHelperRef = new AtomicReference<>();
+        AtomicReference<LuceneIndexHelper<OrderAvro>> indexHelperRef = new AtomicReference<>();
         AtomicBoolean indexingAvailable = new AtomicBoolean(true);
 
         System.out.println("[begin:testWriteAndIndex]");
 
         try {
             // Initialize index helper (sidecar)
-            LuceneIndexHelper ih = new LuceneIndexHelper(Paths.get("order-indexer"));
+            LuceneIndexHelper<OrderAvro> ih = new LuceneIndexHelper<>(Paths.get("order-indexer"));
             //ih.open();
             indexHelperRef.set(ih);
         } catch (Exception e) {
@@ -95,7 +130,7 @@ public class OrderJobController {
                 List<OrderAvro> orders = Order.getAvroOrders(5);
 
                 if (indexingAvailable.get()) {
-                    LuceneIndexHelper ih = indexHelperRef.get();
+                    LuceneIndexHelper<OrderAvro> ih = indexHelperRef.get();
                     if (ih != null) {
                         for (OrderAvro order : orders) {
                             try {
@@ -116,7 +151,7 @@ public class OrderJobController {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            LuceneIndexHelper ih = indexHelperRef.get();
+            LuceneIndexHelper<OrderAvro> ih = indexHelperRef.get();
             if (indexingAvailable.get() && ih != null) {
                 try {
                     ih.close();
@@ -126,7 +161,8 @@ public class OrderJobController {
             }
             System.out.println();
         }
-    }
+    } */
+
 
 }
 

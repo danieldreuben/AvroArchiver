@@ -41,12 +41,22 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
         open(indexPath);
     }
 
-    @Override
+    /*@Override
     public void setKeyExtractor(Function<T, String> keyExtractor) {
 
         this.keyExtractor = keyExtractor;
         System.out.println("key-extractor " + this.keyExtractor);
+    }*/
+
+    @Override
+    public void setKeyExtractor(Function<T, ?> keyExtractor) {
+        this.keyExtractor = t -> {
+            Object key = keyExtractor.apply(t);
+            return key != null ? key.toString() : null;
+        };
+        System.out.println("key-extractor set: " + this.keyExtractor);
     }
+
 
     @Override
     public void index(T record, ArchiveJobParams params) throws Exception {

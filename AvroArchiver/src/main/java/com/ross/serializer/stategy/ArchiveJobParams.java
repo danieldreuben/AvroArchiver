@@ -138,17 +138,8 @@ public class ArchiveJobParams {
     }
 
     public static class Storage {
-        //private String type;
         private FileStorage file;
         private BlobStorage blob;
-
-        /*public String getType() {
-            return type;
-        }
-
-        public void setType(String type) {
-            this.type = type;
-        }*/
 
         public FileStorage getFile() {
             return file;

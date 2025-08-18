@@ -12,7 +12,7 @@ import java.util.function.Function;
 public interface IndexerPlugin<T> {
      
     String extractKey(T record);
-    void setKeyExtractor(Function<T, String> keyExtractor);
+    void setKeyExtractor(Function<T, ?> keyExtractor);
     void index(T record, ArchiveJobParams params) throws Exception;      
 
     /**

@@ -2,7 +2,6 @@ package com.ross.serializer.stategy;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,11 +22,8 @@ import org.apache.avro.specific.SpecificRecord;
 
 public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implements ArchiverStrategy  {
 
-	//private Optional<IndexerPlugin<?>> indexer = Optional.empty();
     private Optional<IndexerPlugin<T>> indexer = Optional.empty();	
 	protected ArchiveJobParams jobParams;
-
-    //private Optional<Function<SpecificRecord, String>> keyExtractor = Optional.empty();
 
     public AvroStreamingStrategy(String job) {
 		this.jobParams = ArchiveJobParams.getInstance(job);	
@@ -54,6 +50,47 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 				if (!shouldContinue) {
 					System.out.println("Terminated deserialization handler on response");
 					break;
+				}
+			}
+		}
+	}
+
+	public <T extends SpecificRecord> void write(
+			Schema schema,
+			Supplier<List<T>> recordSupplier,
+			File file
+	) throws IOException {
+
+		SpecificDatumWriter<T> writer = new SpecificDatumWriter<>(schema);
+
+		try (DataFileWriter<T> dataFileWriter = new DataFileWriter<>(writer)) {
+
+			if (jobParams.getJob().getDeflate() > 0) {
+				dataFileWriter.setCodec(CodecFactory.deflateCodec(jobParams.getJob().getDeflate()));
+			}
+
+			if (file.exists()) {
+				dataFileWriter.appendTo(file);
+			} else {
+				dataFileWriter.create(schema, file);
+			}
+
+			List<T> batch;
+			while (!(batch = recordSupplier.get()).isEmpty()) {
+				for (T record : batch) {
+					dataFileWriter.append(record);
+					System.out.print("$");
+
+					// Index using the plugin's internal key extractor
+					if (indexer.isPresent()) {
+						@SuppressWarnings("unchecked")
+						IndexerPlugin<T> idx = (IndexerPlugin<T>) indexer.get();
+						try {
+							idx.index(record, jobParams); // calls the plugin's key extractor internally
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
 				}
 			}
 		}
@@ -109,47 +146,6 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 		}
 	} */
 
-	public <T extends SpecificRecord> void write(
-			Schema schema,
-			Supplier<List<T>> recordSupplier,
-			File file
-	) throws IOException {
-
-		SpecificDatumWriter<T> writer = new SpecificDatumWriter<>(schema);
-
-		try (DataFileWriter<T> dataFileWriter = new DataFileWriter<>(writer)) {
-
-			if (jobParams.getJob().getDeflate() > 0) {
-				dataFileWriter.setCodec(CodecFactory.deflateCodec(jobParams.getJob().getDeflate()));
-			}
-
-			if (file.exists()) {
-				dataFileWriter.appendTo(file);
-			} else {
-				dataFileWriter.create(schema, file);
-			}
-
-			List<T> batch;
-			while (!(batch = recordSupplier.get()).isEmpty()) {
-				for (T record : batch) {
-					dataFileWriter.append(record);
-					System.out.print("$");
-
-					// Index using the plugin's internal key extractor
-					if (indexer.isPresent()) {
-						@SuppressWarnings("unchecked")
-						IndexerPlugin<T> idx = (IndexerPlugin<T>) indexer.get();
-						try {
-							idx.index(record, jobParams); // calls the plugin's key extractor internally
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			}
-		}
-	}
-
 
 	public <T extends SpecificRecord> void readAll(
 		Schema schema,
@@ -189,7 +185,6 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 		return Optional.empty();
 	}
 
-
 	public <T extends SpecificRecord> void findMatchingRecords(
 		Class<T> clazz,
 		SeekableInput input,
@@ -212,41 +207,16 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 		}
 	}
 
-	public void setLucerneIndexer(String indexer) throws Exception {
-        try {
-            // Initialize index helper (sidecar)
-            LuceneIndexHelper ih = new LuceneIndexHelper(Paths.get(indexer));
-            //setIndexer(ih);
-        } catch (Exception e) {
-			throw e;
-        }		
-	}
 
-	/**
-	 * Sets the optional IndexerPlugin.
-	 * 
-	 * @param indexer the IndexerPlugin instance, or null if none
-	 */
-	/*public void setIndexer(IndexerPlugin indexer) {
-
-		this.indexer = indexer;
-	}*/
-    /*public void setIndexer(IndexerPlugin indexer, Function<SpecificRecord, String> extractor) {
-        this.indexer = Optional.ofNullable(indexer);
-        this.keyExtractor = Optional.ofNullable(extractor);
-    }*/
+    public void setIndexer(IndexerPlugin<T> indexer) {
+        this.indexer = Optional.of(indexer);
+    }
 
 	/**
 	 * Returns the IndexerPlugin wrapped in Optional.
 	 * 
 	 * @return Optional containing the IndexerPlugin if present, otherwise empty
 	 */
-    
-
-    public void setIndexer(IndexerPlugin<T> indexer) {
-        this.indexer = Optional.of(indexer);
-    }
-
     public Optional<IndexerPlugin<T>> getIndexer() {
         return this.indexer;
     }
