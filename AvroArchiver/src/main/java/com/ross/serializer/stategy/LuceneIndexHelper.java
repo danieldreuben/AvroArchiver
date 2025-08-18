@@ -198,51 +198,58 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
     }
 
     @Override
-    public void archiveIndex() throws IOException {
-        archiveDirectoryToTarGz(indexPath.toString());
+    public void archiveIndex(ArchiveJobParams jobParams) throws IOException {
+        System.out.println("archive " + jobParams.getStorage().getFile().getArchiveDir());
+        //System.out.println("base " + jobParams.getStorage().getFile().getBaseDir());   
+        System.out.println("indexer " + jobParams.getIndexer().getName());   
+        archiveDirectoryToTarGz(indexPath.toString(), jobParams.getIndexer().getName());
     }
 
+    @Override    
     public String extractKey(T record) {
         return keyExtractor.apply(record);
     }
 
-    public static void archiveDirectoryToTarGz(String dirPath) throws IOException {
-        Path sourceDir = Paths.get(dirPath);
-        if (!Files.isDirectory(sourceDir)) {
-            throw new IllegalArgumentException("Path is not a directory: " + dirPath);
-        }
-
-        String outputFileName = sourceDir.getFileName().toString() + ".tar.gz";
-        Path outputPath = sourceDir.getParent() != null
-                ? sourceDir.getParent().resolve(outputFileName)
-                : Paths.get(outputFileName);
-
-        try (FileOutputStream fos = new FileOutputStream(outputPath.toFile());
-             GZIPOutputStream gos = new GZIPOutputStream(fos);
-             TarArchiveOutputStream taos = new TarArchiveOutputStream(gos)) {
-
-            taos.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
-
-            Files.walk(sourceDir).forEach(path -> {
-                try {
-                    String relativePath = sourceDir.relativize(path).toString();
-                    if (Files.isDirectory(path)) {
-                        return;
-                    }
-                    TarArchiveEntry entry = new TarArchiveEntry(path.toFile(), relativePath);
-                    taos.putArchiveEntry(entry);
-                    Files.copy(path, taos);
-                    taos.closeArchiveEntry();
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            });
-
-            taos.finish();
-        }
-
-        System.out.println("Archived " + sourceDir + " to " + outputPath);
+public static void archiveDirectoryToTarGz(String dirPath, String destPath) throws IOException {
+    Path sourceDir = Paths.get(dirPath);
+    if (!Files.isDirectory(sourceDir)) {
+        throw new IllegalArgumentException("Path is not a directory: " + dirPath);
     }
+
+    Path outputPath = Paths.get(destPath);
+    if (Files.isDirectory(outputPath)) {
+        // If destination is a directory, place the tar.gz inside it
+        String outputFileName = sourceDir.getFileName().toString() + ".tar.gz";
+        outputPath = outputPath.resolve(outputFileName);
+    }
+
+    try (FileOutputStream fos = new FileOutputStream(outputPath.toFile());
+         GZIPOutputStream gos = new GZIPOutputStream(fos);
+         TarArchiveOutputStream taos = new TarArchiveOutputStream(gos)) {
+
+        taos.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
+
+        Files.walk(sourceDir).forEach(path -> {
+            try {
+                if (Files.isDirectory(path)) {
+                    return;
+                }
+                String relativePath = sourceDir.relativize(path).toString();
+                TarArchiveEntry entry = new TarArchiveEntry(path.toFile(), relativePath);
+                taos.putArchiveEntry(entry);
+                Files.copy(path, taos);
+                taos.closeArchiveEntry();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+
+        taos.finish();
+    }
+
+    System.out.println("Archived " + sourceDir + " to " + outputPath);
+}
+
 
     @Override
     public void close() throws IOException {

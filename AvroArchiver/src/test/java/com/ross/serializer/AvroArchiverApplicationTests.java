@@ -4,13 +4,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.ross.serializer.stategy.ArchiveJobParams;
 import com.ross.serializer.stategy.AvroFileSystemStrategy;
+import com.ross.serializer.stategy.IndexerPlugin;
 import com.ross.serializer.stategy.LuceneIndexHelper;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,10 +41,11 @@ class AvroApplicationArchiverTests {
                 new AvroFileSystemStrategy<>("OrderJob");
 
             indexer = new LuceneIndexHelper<>(Paths.get("order-indexer"));
-            //indexer.setKeyExtractor(record -> record.getOrderId().toString());
-            indexer.setKeyExtractor(OrderAvro::getOrderId);
+            indexer.setKeyExtractor(OrderAvro::getOrderId); // lamda syntax: record -> record.getOrderId()
             strategy.setIndexer(indexer);
 
+            Assertions.assertTrue(Files.exists(Paths.get("order-indexer")), "Index path should exist");
+            //Assertions.assertTrue(Files.list(Paths.get("order-indexer")).findAny().isPresent(), "Index directory should not be empty");            
 
             AtomicBoolean alreadyRun = new AtomicBoolean(false);
 
@@ -52,7 +56,7 @@ class AvroApplicationArchiverTests {
                     : Order.getAvroOrders(50)
             );
         } catch (Exception e) {
-            e.printStackTrace();
+            Assertions.fail("Exception during testWrite: " + e.getMessage(), e);
         } finally {
             if (indexer != null) {
                 try { indexer.close(); } catch (IOException ignore) {}
@@ -75,7 +79,7 @@ class AvroApplicationArchiverTests {
                 });
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Assertions.fail("Exception during testRead: " + e.getMessage(), e);
         } finally 
         { System.out.println(); }
     } 
@@ -101,7 +105,7 @@ class AvroApplicationArchiverTests {
             System.out.println("\nTotal matches collected: " + matches.size());
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Assertions.fail("Exception during testFindOrderAvroCurrentJob2: " + e.getMessage(), e);
         }
     }
    
@@ -120,8 +124,51 @@ class AvroApplicationArchiverTests {
             System.out.println();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Assertions.fail("Exception during testBatchedRead: " + e.getMessage(), e);
         }
+    }
+    
+    /**
+     * Unit test for archiving a Lucene index directory to a compressed TAR (tar.gz) file.
+     * <p>
+     * This test:
+     * <ul>
+     *   <li>Loads {@link ArchiveJobParams} for the {@code OrderJob} configuration.</li>
+     *   <li>Resolves the source Lucene index directory path.</li>
+     *   <li>Resolves the destination archive directory path.</li>
+     *   <li>Invokes {@link LuceneIndexHelper#archiveDirectoryToTarGz(String, String)} 
+     *       to create a {@code .tar.gz} archive of the index.</li>
+     * </ul>
+     * <p>
+     * Expected behavior:
+     * <ul>
+     *   <li>The archive file should be created in the specified destination directory.</li>
+     * </ul>
+     * <p>
+     * You can verify the archive manually on the command line with:
+     * <pre>{@code
+     *   tar -tvzf ./archives/order-indexer.tar.gz
+     * }</pre>
+     *
+     * If any exception occurs, the test fails with a descriptive message.
+     */        
+    @Test
+    void testTarIndex() {
+        System.out.println("[begin:testTarIndex]");
+        try {
+            ArchiveJobParams jobParams = ArchiveJobParams.getInstance("OrderJob");   
+
+            String srcIndex = jobParams.getIndexer().getName();
+            String destTar = jobParams.getStorage().getFile().getArchiveDir();
+
+            System.out.println("archive " + jobParams.getStorage().getFile().getArchiveDir());
+            System.out.println("indexer " + jobParams.getIndexer().getName());                       
+
+            LuceneIndexHelper.archiveDirectoryToTarGz(srcIndex, destTar);
+
+        } catch (Exception e) {
+            Assertions.fail("Failed to TAR index : " + e.getMessage(), e);
+        }    
     }
 
     @Test
@@ -164,45 +211,43 @@ class AvroApplicationArchiverTests {
         System.out.println("Completed archives: " + completed);
     }
 
-   @Test
+    @Test
     void testLucerneIndex() {
         System.out.println("[begin:testLucerneIndex]");
 
-        try (LuceneIndexHelper<OrderAvro> helper = new LuceneIndexHelper<OrderAvro>(Paths.get("order-indexer"))) {     
+        try (LuceneIndexHelper<OrderAvro> helper =
+                new LuceneIndexHelper<>(Paths.get("order-indexer"))) {
+
+            // Insert
             helper.indexAndCommit("myTestKey", "myTestFile.avro");
-            helper.findLocationsForIndex("myTestKey").forEach(result ->
-                System.out.println("Index: " + result.getIndex() + 
-                    ", File: " + result.getLocation())
+
+            // Search
+            List<LuceneIndexHelper.MatchResult> results =
+                helper.findLocationsForIndex("myTestKey");
+
+            // ✅ Assertions
+            Assertions.assertFalse(results.isEmpty(),
+                "Expected to find at least one result for key 'myTestKey'");
+            Assertions.assertTrue(
+                results.stream().anyMatch(r -> "myTestFile.avro".equals(r.getLocation())),
+                "Expected location 'myTestFile.avro' to be in search results"
             );
+
+            // Cleanup
             helper.deleteKeys("myTestKey*");
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        } 
-    } 
+            // ✅ Assert cleanup worked
+            List<LuceneIndexHelper.MatchResult> afterDelete =
+                helper.findLocationsForIndex("myTestKey");
 
-    //@Test
-    void testLucerneIndex2() {
-        System.out.println("[begin:testLucerneIndex]");
-
-        try (LuceneIndexHelper<OrderAvro> helper =
-                    new LuceneIndexHelper<>(Paths.get("order-indexer"))) {
-
-            List<LuceneIndexHelper.MatchResult> all = helper.findLocationsForIndex("*");
-
-            if (all == null || all.isEmpty()) {
-                System.out.println("Index is empty.");
-            } else {
-                System.out.println("Found " + all.size() + " entries in the index:");
-                for (LuceneIndexHelper.MatchResult match : all) {
-                    System.out.println(" - " + match);
-                }
-            }
+            Assertions.assertTrue(afterDelete.isEmpty(),
+                "Expected no results after deleting key 'myTestKey*'");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Assertions.fail("Exception during testLucerneIndex: " + e.getMessage(), e);
         }
     }
+
 
     @Test
     void testReadAllOrders()  {
@@ -217,7 +262,7 @@ class AvroApplicationArchiverTests {
                     }
                 );
         } catch (Exception e) {
-            e.printStackTrace();
+            Assertions.fail("Exception during testReadAllOrders: " + e.getMessage(), e);
         } finally 
         { System.out.println(); }
     }      
@@ -250,7 +295,7 @@ class AvroApplicationArchiverTests {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Assertions.fail("Exception during testReadAllOrders: " + e.getMessage(), e);
         }
     }
 }

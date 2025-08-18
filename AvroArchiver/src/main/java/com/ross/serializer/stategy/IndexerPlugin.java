@@ -63,7 +63,7 @@ public interface IndexerPlugin<T> {
      *
      * @throws IOException if archiving fails
      */
-    void archiveIndex() throws IOException;
+    void archiveIndex(ArchiveJobParams jobParams) throws IOException;
 
     /**
      * Closes the index, releasing resources.

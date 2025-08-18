@@ -75,8 +75,7 @@ public class OrderJobController {
                 new AvroFileSystemStrategy<>("OrderJob");
 
             indexer = new LuceneIndexHelper<>(Paths.get("order-indexer"));
-            //indexer.setKeyExtractor(record -> record.getOrderId().toString());
-            indexer.setKeyExtractor(OrderAvro::getOrderId);
+            indexer.setKeyExtractor(OrderAvro::getOrderId); // lamda syntax: record -> record.getOrderId()
             strategy.setIndexer(indexer);
 
 
@@ -97,72 +96,5 @@ public class OrderJobController {
             System.out.println();
         }
     }    
-
-/* 
-    void testWriteAndIndex() {
-        // mutable holders so lambda can reference them
-        AtomicReference<LuceneIndexHelper<OrderAvro>> indexHelperRef = new AtomicReference<>();
-        AtomicBoolean indexingAvailable = new AtomicBoolean(true);
-
-        System.out.println("[begin:testWriteAndIndex]");
-
-        try {
-            // Initialize index helper (sidecar)
-            LuceneIndexHelper<OrderAvro> ih = new LuceneIndexHelper<>(Paths.get("order-indexer"));
-            //ih.open();
-            indexHelperRef.set(ih);
-        } catch (Exception e) {
-            System.err.println("Index helper failed to initialize: " + e.getMessage());
-            indexingAvailable.set(false);
-        }
-
-        try {
-            AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob");
-            String location = strategy.getJobParams().getNaming();
-            AtomicBoolean alreadyRun = new AtomicBoolean(false);
-
-            // Supplier that both produces and indexes (indexes only if indexingAvailable)
-            Supplier<List<OrderAvro>> indexAwareSupplier = () -> {
-                if (alreadyRun.getAndSet(true)) {
-                    return Collections.emptyList(); // terminate
-                }
-
-                List<OrderAvro> orders = Order.getAvroOrders(5);
-
-                if (indexingAvailable.get()) {
-                    LuceneIndexHelper<OrderAvro> ih = indexHelperRef.get();
-                    if (ih != null) {
-                        for (OrderAvro order : orders) {
-                            try {
-                                ih.indexRecord(order.getOrderId().toString(), location);
-                            } catch (Exception ex) {
-                                System.err.println("Failed to index orderId " + order.getOrderId() + ": " + ex.getMessage());
-                            }
-                        }
-                    }
-                }
-
-                return orders;
-            };
-
-            // Write using the supplier (also triggers indexing)
-            strategy.write(OrderAvro.getClassSchema(), indexAwareSupplier);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            LuceneIndexHelper<OrderAvro> ih = indexHelperRef.get();
-            if (indexingAvailable.get() && ih != null) {
-                try {
-                    ih.close();
-                } catch (Exception ex) {
-                    System.err.println("Failed to close index helper: " + ex.getMessage());
-                }
-            }
-            System.out.println();
-        }
-    } */
-
-
 }
 
