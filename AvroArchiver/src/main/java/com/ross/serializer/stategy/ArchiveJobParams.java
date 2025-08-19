@@ -7,11 +7,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 public class ArchiveJobParams {
-
+	private static final Logger log = LoggerFactory.getLogger(ArchiveJobParams.class);
     private Job job;
     private Storage storage;
     private Indexer indexer;
@@ -43,13 +46,14 @@ public class ArchiveJobParams {
             }                   
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             String fullPath = job + ".yaml";
-            System.out.println(">>>"+fullPath);
+            log.debug(">>>"+fullPath);
+            
             ArchiveJobParams config = mapper.readValue(new File(fullPath), ArchiveJobParams.class);
           
             return config;    
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return null;
     }

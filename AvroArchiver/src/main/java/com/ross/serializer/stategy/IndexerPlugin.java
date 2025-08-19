@@ -1,7 +1,7 @@
 package com.ross.serializer.stategy;
 
 import java.io.IOException;
-import java.nio.file.Path;
+
 import java.util.List;
 import java.util.function.Function;
 
@@ -21,7 +21,7 @@ public interface IndexerPlugin<T> {
      * @param indexPath Path to the index directory
      * @throws IOException if the index cannot be opened
      */
-    void open(Path indexPath) throws IOException;
+    //void open(Path indexPath) throws IOException;
 
     /**
      * Indexes a single record in the index.

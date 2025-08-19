@@ -15,12 +15,18 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.SeekableInput;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
+import org.slf4j.LoggerFactory;
 
+import org.slf4j.Logger;
 
 public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implements ArchiverStrategy  {
+    
+	private static final Logger log = LoggerFactory.getLogger(AvroStreamingStrategy.class);
 
     private Optional<IndexerPlugin<T>> indexer = Optional.empty();	
 	protected ArchiveJobParams jobParams;
@@ -48,7 +54,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 				T record = dataFileReader.next();
 				boolean shouldContinue = recordHandler.apply(record);
 				if (!shouldContinue) {
-					System.out.println("Terminated deserialization handler on response");
+					log.info("Terminated deserialization handler on response");
 					break;
 				}
 			}
@@ -89,6 +95,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 							idx.index(record, jobParams); // calls the plugin's key extractor internally
 						} catch (Exception e) {
 							e.printStackTrace();
+							log.error(e.getMessage());
 						}
 					}
 				}
@@ -113,7 +120,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 					boolean shouldContinue = recordHandler.apply(records);
 					records.clear();
 					if (!shouldContinue) {
-						System.out.println("Terminated deserialization handler on response");
+						log.debug("Terminated deserialization handler on response");
 						break;
 					}
 				}
@@ -206,6 +213,34 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 			}
 		}
 	}
+
+	@Override
+	public <T extends SpecificRecord> long fastCountRecords(
+		Class<T> clazz,
+		SeekableInput input
+	) throws IOException {
+
+		T instance;
+		try {
+			instance = clazz.getDeclaredConstructor().newInstance();
+		} catch (Exception e) {
+			throw new IOException("Failed to instantiate Avro record class: " + clazz.getName(), e);
+		}
+
+		Schema schema = instance.getSchema();
+		SpecificDatumReader<T> reader = new SpecificDatumReader<>(schema);
+
+		long totalCount = 0;
+		try (DataFileReader<T> dataFileReader = new DataFileReader<>(input, reader)) {
+			while (dataFileReader.hasNext()) {
+				dataFileReader.next(); // advance record
+				totalCount++;
+			}
+		}
+
+		return totalCount;
+	}
+
 
 
     public void setIndexer(IndexerPlugin<T> indexer) {

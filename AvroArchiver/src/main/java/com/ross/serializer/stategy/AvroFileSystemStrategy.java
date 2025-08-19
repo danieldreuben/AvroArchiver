@@ -17,9 +17,13 @@ import org.apache.avro.Schema;
 import org.apache.avro.file.SeekableFileInput;
 import org.apache.avro.file.SeekableInput;
 import org.apache.avro.specific.SpecificRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStreamingStrategy<T> {
+    
+    private static final Logger log = LoggerFactory.getLogger(AvroFileSystemStrategy.class);
 
     public AvroFileSystemStrategy(String job) {	
         super(job);
@@ -36,7 +40,6 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         try (SeekableInput input = new SeekableFileInput(file)) {
             super.read(schema, input, recordHandler); 
         } catch (Exception e) {
-            e.printStackTrace();
             throw e;
         }
     }
@@ -52,7 +55,6 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         try (SeekableInput input = new SeekableFileInput(file)) {
             super.readAll(schema, input, recordHandler); 
         } catch (Exception e) {
-            e.printStackTrace();
             throw e; 
         }
     }
@@ -68,7 +70,6 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         try (SeekableInput input = new SeekableFileInput(file)) {
             super.readBatched(schema, input, recordHandler); 
         } catch (Exception e) {
-            e.printStackTrace();
             throw e;
         }
     }
@@ -84,10 +85,30 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
             super.write(schema, recordSupplier, file);
 
         } catch (Exception e) {
-            e.printStackTrace();
             throw e;
         }
     } 
+
+    //@Override
+    public <T extends SpecificRecord> long count(
+        Class<T> clazz
+    ) throws IOException {
+        try {
+            String fullPath = jobParams.getNaming();
+            File file = new File(fullPath);
+
+            if (!file.exists()) {
+                throw new IOException("Avro file not found at: " + fullPath);
+            }
+
+            try (SeekableFileInput input = new SeekableFileInput(file)) {
+                return super.fastCountRecords(clazz, input);
+            }
+        } catch (Exception e) {
+            throw new IOException("Failed to count records", e);
+        }
+    }
+
 
     /*@Override
     public <T extends SpecificRecord> void write(
@@ -137,7 +158,6 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         try (SeekableInput input = new SeekableFileInput(file)) {
             super.findMatchingRecords(clazz, input, recordFilter, onMatch);
         } catch (Exception e) {
-            e.printStackTrace();
             throw e;
         }
     }
@@ -169,13 +189,12 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
             try {
                 Files.createDirectories(target.getParentFile().toPath());
                 Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("Archived: " + archiveName);
+                log.debug("Archived: " + archiveName);
             } catch (IOException e) {
-                System.err.println("Failed to copy " + archiveName + ": " + e.getMessage());
+                log.error("Failed to copy " + archiveName + ": " + e.getMessage());
                 return false;
             }
         }
-
         return true;
     }
 
@@ -202,7 +221,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         // 1. List all archives in baseDir matching the "<baseName>-*.avro" pattern
         File root = new File(reference);
         if (!root.exists() || !root.isDirectory()) {
-            System.err.println("Directory not found: " + reference);
+            log.error("Directory not found: " + reference);
             return new ArrayList<>();
         }
 

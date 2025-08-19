@@ -4,7 +4,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.ross.serializer.stategy.ArchiveJobParams;
 import com.ross.serializer.stategy.AvroFileSystemStrategy;
-import com.ross.serializer.stategy.IndexerPlugin;
 import com.ross.serializer.stategy.LuceneIndexHelper;
 
 import org.junit.jupiter.api.Test;
@@ -22,9 +21,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @SpringBootTest
 @TestMethodOrder(OrderAnnotation.class)
 class AvroApplicationArchiverTests {
+    private static final Logger log = LoggerFactory.getLogger(AvroApplicationArchiverTests.class);
 
 	@Test
 	void contextLoads() {}
@@ -35,7 +39,7 @@ class AvroApplicationArchiverTests {
         LuceneIndexHelper<OrderAvro> indexer = null;
 
         try {
-            System.out.println("[begin:testWrite]");
+            log.info("[begin:testWrite]");
 
             AvroFileSystemStrategy<OrderAvro> strategy =
                 new AvroFileSystemStrategy<>("OrderJob");
@@ -55,6 +59,8 @@ class AvroApplicationArchiverTests {
                     ? Collections.emptyList()
                     : Order.getAvroOrders(50)
             );
+            log.info("count " + strategy.count(OrderAvro.class));
+
         } catch (Exception e) {
             Assertions.fail("Exception during testWrite: " + e.getMessage(), e);
         } finally {
@@ -68,7 +74,7 @@ class AvroApplicationArchiverTests {
     @Test
     void testRead() {
         try {
-            System.out.println("[begin:testRead]");            
+            log.info("[begin:testRead]");            
             final int[] count = {0};
 
             new AvroFileSystemStrategy<OrderAvro>("OrderJob")
@@ -87,7 +93,7 @@ class AvroApplicationArchiverTests {
     @Test
     void testFindOrderAvroCurrentJob2() {
         try {
-            System.out.println("[testFindOrderAvroCurrentJob2]");
+            log.info("[testFindOrderAvroCurrentJob2]");
             List<OrderAvro> matches = new ArrayList<>();
 
             new AvroFileSystemStrategy<OrderAvro>("OrderJob")
@@ -102,7 +108,7 @@ class AvroApplicationArchiverTests {
                     }
                 );
 
-            System.out.println("\nTotal matches collected: " + matches.size());
+            log.info("\nTotal matches collected: " + matches.size());
 
         } catch (Exception e) {
             Assertions.fail("Exception during testFindOrderAvroCurrentJob2: " + e.getMessage(), e);
@@ -112,7 +118,7 @@ class AvroApplicationArchiverTests {
     @Test
     void testBatchedRead() {
         try {
-            System.out.println("[begin:testBatchedRead]");
+            log.info("[begin:testBatchedRead]");
 
             final int[] batchCount = {0};
 
@@ -127,7 +133,7 @@ class AvroApplicationArchiverTests {
             Assertions.fail("Exception during testBatchedRead: " + e.getMessage(), e);
         }
     }
-    
+
     /**
      * Unit test for archiving a Lucene index directory to a compressed TAR (tar.gz) file.
      * <p>
@@ -154,15 +160,15 @@ class AvroApplicationArchiverTests {
      */        
     @Test
     void testTarIndex() {
-        System.out.println("[begin:testTarIndex]");
+        log.info("[begin:testTarIndex]");
         try {
             ArchiveJobParams jobParams = ArchiveJobParams.getInstance("OrderJob");   
 
             String srcIndex = jobParams.getIndexer().getName();
             String destTar = jobParams.getStorage().getFile().getArchiveDir();
 
-            System.out.println("archive " + jobParams.getStorage().getFile().getArchiveDir());
-            System.out.println("indexer " + jobParams.getIndexer().getName());                       
+            log.info("archive " + jobParams.getStorage().getFile().getArchiveDir());
+            log.info("indexer " + jobParams.getIndexer().getName());                       
 
             LuceneIndexHelper.archiveDirectoryToTarGz(srcIndex, destTar);
 
@@ -171,9 +177,12 @@ class AvroApplicationArchiverTests {
         }    
     }
 
-    @Test
+    // Incomplete: Idea is to put archive(s) from current working folder but if put is used 
+    // after write of current archive then no necessary.
+    // 
+    //@Test
     void testCompletedArchives() {
-        System.out.println("[begin:testCompletedArchives]");
+        log.info("[begin:testCompletedArchives]");
         // Given: a mix of past and current archive files
         List<String> archives = Arrays.asList(
             "order-archive-2025W24.avro", // Past week
@@ -195,25 +204,12 @@ class AvroApplicationArchiverTests {
         AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob");
         strategy.put("test");
 
-        // Then: current week's archive should NOT be included
-//        assertFalse(completed.contains("order-archive-2025W25.avro"), 
-//            "Current week archive should not be marked as completed");
-
-        // And: past weeks should be included
-//        assertTrue(completed.contains("order-archive-2025W24.avro"),
-//            "Past week should be marked as completed");
-//        assertTrue(completed.contains("order-archive-2024W52.avro"),
-//            "Previous year archive should be marked as completed");
-
-        // Optional: verify total count
- //       assertEquals(2, completed.size(), "Only past archives should be returned");
-
-        System.out.println("Completed archives: " + completed);
+        log.info("Completed archives: " + completed);
     }
 
     @Test
     void testLucerneIndex() {
-        System.out.println("[begin:testLucerneIndex]");
+        log.info("[begin:testLucerneIndex]");
 
         try (LuceneIndexHelper<OrderAvro> helper =
                 new LuceneIndexHelper<>(Paths.get("order-indexer"))) {
@@ -252,7 +248,7 @@ class AvroApplicationArchiverTests {
     @Test
     void testReadAllOrders()  {
         try {
-            System.out.println("[begin:testReadAllOrders]");
+            log.info("[begin:testReadAllOrders]");
             new AvroFileSystemStrategy<OrderAvro>("order-archive-2025W28.avro")
                 .readAll(
                     OrderAvro.getClassSchema(),
@@ -271,7 +267,7 @@ class AvroApplicationArchiverTests {
     void testFindOrderAvroCurrentJob1() {
         final int[] count = {0};
         try {
-            System.out.println("[testFindOrderAvroCurrentJob1]");
+            log.info("[testFindOrderAvroCurrentJob1]");
             Optional<OrderAvro> match = 
                 new AvroFileSystemStrategy<OrderAvro>("OrderJob")            
                     .find(
@@ -286,12 +282,12 @@ class AvroApplicationArchiverTests {
                     );
 
             match.ifPresent(order -> {
-                System.out.println("\nMatched shipping > 3000 - " + count[0] 
+                log.info("\nMatched shipping > 3000 - " + count[0] 
                     + " match(es): id " + order.getOrderId());
             });
 
             if (match.isEmpty()) {
-                System.out.println("\nNo match found after checking " + count[0] + " potential matches.");
+                log.info("\nNo match found after checking " + count[0] + " potential matches.");
             }
 
         } catch (Exception e) {

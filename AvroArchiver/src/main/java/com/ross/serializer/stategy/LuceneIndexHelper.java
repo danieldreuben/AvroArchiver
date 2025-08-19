@@ -7,6 +7,8 @@ import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.FileOutputStream;
@@ -28,7 +30,8 @@ import java.util.zip.GZIPOutputStream;
  */
  
 public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
-           
+	private static final Logger log = LoggerFactory.getLogger(LuceneIndexHelper.class);
+
     protected final Path indexPath;
     protected Directory directory;
     protected IndexWriter indexWriter;
@@ -41,20 +44,13 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
         open(indexPath);
     }
 
-    /*@Override
-    public void setKeyExtractor(Function<T, String> keyExtractor) {
-
-        this.keyExtractor = keyExtractor;
-        System.out.println("key-extractor " + this.keyExtractor);
-    }*/
-
     @Override
     public void setKeyExtractor(Function<T, ?> keyExtractor) {
         this.keyExtractor = t -> {
             Object key = keyExtractor.apply(t);
             return key != null ? key.toString() : null;
         };
-        System.out.println("key-extractor set: " + this.keyExtractor);
+       log.debug("key-extractor set: " + this.keyExtractor);
     }
 
 
@@ -69,10 +65,10 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
         System.out.print('i');
     }
 
-    @Override
+    //@Override
     public void open(Path indexPath) throws IOException {
         if (indexWriter != null && indexWriter.isOpen()) {
-            System.out.println("IndexWriter already open: " + indexPath);
+            log.debug("IndexWriter already open: " + indexPath);
             return;
         }
 
@@ -90,7 +86,7 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
                 ? IndexWriterConfig.OpenMode.APPEND
                 : IndexWriterConfig.OpenMode.CREATE);
 
-        System.out.println("-->sidecar: Lucene index at: " + indexPath);
+        log.debug("-->sidecar: Lucene index at: " + indexPath);
         indexWriter = new IndexWriter(directory, config);
     }
 
@@ -148,7 +144,7 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
         }
 
         if (!DirectoryReader.indexExists(directory)) {
-            System.out.println("No index exists at " + indexPath);
+            log.info("No index exists at " + indexPath);
             return List.of();
         }
 
@@ -172,8 +168,10 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
         TopDocs results = searcher.search(query, 500);
 
         List<MatchResult> matches = new ArrayList<>();
+        StoredFields storedFields = reader.storedFields();
+
         for (ScoreDoc sd : results.scoreDocs) {
-            Document doc = searcher.doc(sd.doc);
+            Document doc = storedFields.document(sd.doc);
             String location = doc.get("location");
             String index = doc.get("index");
             if (location != null && index != null) {
@@ -183,6 +181,7 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
 
         return matches;
     }
+
 
     @Override
     public void deleteKeys(String indexPattern) throws IOException {
@@ -194,14 +193,14 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
         Query query = new WildcardQuery(new Term("index", normalizedPattern));
         indexWriter.deleteDocuments(query);
         indexWriter.commit();
-        System.out.println("Deleted documents matching: " + normalizedPattern);
+        log.debug("Deleted documents matching: " + normalizedPattern);
     }
 
     @Override
     public void archiveIndex(ArchiveJobParams jobParams) throws IOException {
-        System.out.println("archive " + jobParams.getStorage().getFile().getArchiveDir());
+        log.debug("archive " + jobParams.getStorage().getFile().getArchiveDir());
         //System.out.println("base " + jobParams.getStorage().getFile().getBaseDir());   
-        System.out.println("indexer " + jobParams.getIndexer().getName());   
+        log.debug("indexer " + jobParams.getIndexer().getName());   
         archiveDirectoryToTarGz(indexPath.toString(), jobParams.getIndexer().getName());
     }
 
@@ -210,7 +209,7 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
         return keyExtractor.apply(record);
     }
 
-public static void archiveDirectoryToTarGz(String dirPath, String destPath) throws IOException {
+    public static void archiveDirectoryToTarGz(String dirPath, String destPath) throws IOException {
     Path sourceDir = Paths.get(dirPath);
     if (!Files.isDirectory(sourceDir)) {
         throw new IllegalArgumentException("Path is not a directory: " + dirPath);
@@ -247,7 +246,7 @@ public static void archiveDirectoryToTarGz(String dirPath, String destPath) thro
         taos.finish();
     }
 
-    System.out.println("Archived " + sourceDir + " to " + outputPath);
+    log.debug("Archived " + sourceDir + " to " + outputPath);
 }
 
 

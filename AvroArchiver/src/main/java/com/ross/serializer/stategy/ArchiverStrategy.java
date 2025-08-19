@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.apache.avro.Schema;
+import org.apache.avro.file.SeekableInput;
 import org.apache.avro.specific.SpecificRecord;
 
 public interface ArchiverStrategy {
@@ -225,7 +226,11 @@ public interface ArchiverStrategy {
 		Function<T, Boolean> onMatch
 	) throws Exception;
 
-
+	public <T extends SpecificRecord> long fastCountRecords(
+		Class<T> clazz,
+		SeekableInput input
+	) throws IOException;
+	
 	public abstract boolean put(String name);
 	public abstract boolean get(String name);
 	public abstract List<String> getNames(String ref);	
