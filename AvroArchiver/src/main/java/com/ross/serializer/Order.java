@@ -50,7 +50,7 @@ public class Order {
         List<OrderAvro> records = new ArrayList<>();
         byte[] imageBytes = null;
 
-        for (int i = 0; i <= num; i++) {
+        for (int i = 0; i < num; i++) {
             
             int randomordernum = new Random().nextInt(10000) + 1;
             String orderId = "ORDER-" + String.format("%03d", randomordernum);

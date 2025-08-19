@@ -124,7 +124,7 @@ class AvroApplicationArchiverTests {
 
             new AvroFileSystemStrategy<OrderAvro>("OrderJob")
                 .readBatched(OrderAvro.getClassSchema(), (List<OrderAvro> batch) -> {
-                    batch.forEach(order -> System.out.print("$")); 
+                    batch.forEach(order -> log.debug("$")); 
                     return ++batchCount[0] < 5; // Stop after n batches
                 });
             System.out.println();

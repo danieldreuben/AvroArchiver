@@ -62,11 +62,11 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
         String key = keyExtractor.apply(record);
         indexRecord(key, params.getNaming());
         //System.out.println("Indexed "+ params.getNaming() +" with key: " + key);
-        System.out.print('i');
+        //System.out.print('i');
     }
 
     //@Override
-    public void open(Path indexPath) throws IOException {
+    protected void open(Path indexPath) throws IOException {
         if (indexWriter != null && indexWriter.isOpen()) {
             log.debug("IndexWriter already open: " + indexPath);
             return;

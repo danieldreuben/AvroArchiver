@@ -89,7 +89,7 @@ public interface ArchiverStrategy {
 		Schema schema,
 		Supplier<List<T>> recordSupplier,
 		File file
-	) throws IOException;
+	) throws Exception;
 
 	/**
 	 * Finds the first Avro record matching the given filter predicate.
@@ -230,7 +230,7 @@ public interface ArchiverStrategy {
 		Class<T> clazz,
 		SeekableInput input
 	) throws IOException;
-	
+
 	public abstract boolean put(String name);
 	public abstract boolean get(String name);
 	public abstract List<String> getNames(String ref);	

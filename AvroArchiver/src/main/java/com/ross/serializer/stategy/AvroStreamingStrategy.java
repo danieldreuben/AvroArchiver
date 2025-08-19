@@ -65,7 +65,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 			Schema schema,
 			Supplier<List<T>> recordSupplier,
 			File file
-	) throws IOException {
+	) throws Exception {
 
 		SpecificDatumWriter<T> writer = new SpecificDatumWriter<>(schema);
 
@@ -85,7 +85,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 			while (!(batch = recordSupplier.get()).isEmpty()) {
 				for (T record : batch) {
 					dataFileWriter.append(record);
-					System.out.print("$");
+					//System.out.print("$");
 
 					// Index using the plugin's internal key extractor
 					if (indexer.isPresent()) {
@@ -94,8 +94,8 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 						try {
 							idx.index(record, jobParams); // calls the plugin's key extractor internally
 						} catch (Exception e) {
-							e.printStackTrace();
 							log.error(e.getMessage());
+							throw e;
 						}
 					}
 				}

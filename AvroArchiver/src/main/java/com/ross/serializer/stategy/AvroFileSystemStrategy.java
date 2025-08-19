@@ -85,7 +85,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
             super.write(schema, recordSupplier, file);
 
         } catch (Exception e) {
-            throw e;
+            throw new IOException(e);
         }
     } 
 
