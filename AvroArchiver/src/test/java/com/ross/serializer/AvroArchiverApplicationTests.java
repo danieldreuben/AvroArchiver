@@ -247,7 +247,7 @@ class AvroApplicationArchiverTests {
     void testReadAllOrders()  {
         try {
             log.info("[begin:testReadAllOrders]");
-            new AvroFileSystemStrategy<OrderAvro>("order-archive-2025W28.avro")
+            new AvroFileSystemStrategy<OrderAvro>("./order-archive-2025W28.avro")
                 .readAll(
                     OrderAvro.getClassSchema(),
                     (List<OrderAvro> orders) -> {

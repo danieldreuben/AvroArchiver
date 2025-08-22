@@ -34,7 +34,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         Schema schema,
         Function<T, Boolean> recordHandler
     ) throws IOException {
-        String fullPath = jobParams.getNaming();
+        String fullPath = jobParams.getFullPath();
         File file = new File(fullPath);
 
         try (SeekableInput input = new SeekableFileInput(file)) {
@@ -49,7 +49,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         Schema schema,
         Consumer<List<T>> recordHandler
     ) throws IOException {
-        String fullPath = jobParams.getNaming();
+        String fullPath = jobParams.getFullPath();
         File file = new File(fullPath);
 
         try (SeekableInput input = new SeekableFileInput(file)) {
@@ -64,7 +64,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         Schema schema,
         Function<List<T>, Boolean> recordHandler
     ) throws IOException {
-        String fullPath = jobParams.getNaming();
+        String fullPath = jobParams.getFullPath();
         File file = new File(fullPath);
 
         try (SeekableInput input = new SeekableFileInput(file)) {
@@ -80,8 +80,8 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         Supplier<List<T>> recordSupplier
     ) throws IOException {
         try {
-            String fullPath = jobParams.getNaming();
-            //System.out.println(fullPath);
+            String fullPath = jobParams.getFullPath();
+            System.out.println("full-path " + fullPath);
             File file = new File(fullPath);
             super.write(schema, recordSupplier, file);
 
@@ -95,7 +95,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         Class<T> clazz
     ) throws IOException {
         try {
-            String fullPath = jobParams.getNaming();
+            String fullPath = jobParams.getFullPath();
             File file = new File(fullPath);
 
             if (!file.exists()) {
@@ -110,50 +110,13 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
         }
     }
 
-
-    /*@Override
-    public <T extends SpecificRecord> void write(
-        Schema schema,
-        Supplier<List<T>> recordSupplier
-    ) throws IOException {
-        String fullPath = jobParams.getNaming();
-        File file = new File(fullPath);
-        System.out.println(fullPath);
-
-        try {
-            SpecificDatumWriter<T> writer = new SpecificDatumWriter<>(schema);
-            DataFileWriter<T> dataFileWriter = new DataFileWriter<>(writer);
-
-            if (file.exists()) {
-                dataFileWriter.appendTo(file); 
-            } else {
-                dataFileWriter.create(schema, file);  
-            }
-
-            List<T> batch;
-            while (!(batch = recordSupplier.get()).isEmpty()) {
-                for (T record : batch) {
-                    dataFileWriter.append(record);
-                    System.out.print(".");
-                } 
-                super.writeIndex(batch);
-            }        
-
-            dataFileWriter.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
-    }*/
-
     @Override
     public <T extends SpecificRecord> void findMatchingRecords(
         Class<T> clazz,
         Predicate<T> recordFilter,
         Function<T, Boolean> onMatch
     ) throws Exception {
-        String fullPath = jobParams.getNaming();
+        String fullPath = jobParams.getFullPath();        
         File file = new File(fullPath);
 
         try (SeekableInput input = new SeekableFileInput(file)) {
@@ -176,11 +139,11 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
      */    
     @Override
     public boolean put(String name) {
-        String baseDir = jobParams.getStorage().getFile().getBaseDir();
+        String workDir = jobParams.getStorage().getFile().getWorkDir();
         String archiveDir = jobParams.getStorage().getFile().getArchiveDir();
 
-        File root = new File(baseDir);
-        List<String> archives = getNames(baseDir);
+        File root = new File(workDir);
+        List<String> archives = getNames(workDir);
 
         // 3. Copy completed archives to archiveDir
         for (String archiveName : archives) {

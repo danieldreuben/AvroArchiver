@@ -49,7 +49,8 @@ public class ArchiveJobParams {
                 File file = new File(job);
                 ArchiveJobParams params = new ArchiveJobParams();
                 params.getJob().setFileName(file.getName());
-                params.getStorage().getFile().setBaseDir(file.getParent() != null ? file.getParent() : "");       
+                params.getStorage().getFile().setWorkDir(file.getParent() != null ? file.getParent() : "");  
+                //System.out.println("workdir: " + file.getParent());     
                 return params;
             }
 
@@ -82,6 +83,10 @@ public class ArchiveJobParams {
             getJob().getFileName() :
                 nameResolver.
                 resolveAvroArchiveFileName(getJob().getFileName(), getJob().archiveNamingScheme);            
+    }
+
+    public String getFullPath() {
+        return getStorage().getFile().getWorkDir() + "/" + getNaming();
     }
 
     public Job getJob() {
@@ -179,15 +184,15 @@ public class ArchiveJobParams {
 
         public static class FileStorage {
         
-            private String baseDir;
+            private String workDir;
             private String archiveDir;
             
-            public String getBaseDir() {
-                return baseDir;
+            public String getWorkDir() {
+                return workDir;
             }
 
-            public void setBaseDir(String baseDir) {
-                this.baseDir = baseDir;
+            public void setWorkDir(String workDir) {
+                this.workDir = workDir;
             }
             public String getArchiveDir() {
                 return archiveDir;
