@@ -2,12 +2,10 @@ package com.ross.serializer;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
 import org.springframework.stereotype.Component;
 
@@ -78,7 +76,6 @@ public class OrderJobController {
             indexer.setKeyExtractor(OrderAvro::getOrderId); // lamda syntax: record -> record.getOrderId()
             strategy.setIndexer(indexer);
 
-
             AtomicBoolean alreadyRun = new AtomicBoolean(false);
 
             strategy.write(
@@ -86,14 +83,13 @@ public class OrderJobController {
                 () -> alreadyRun.getAndSet(true)
                     ? Collections.emptyList()
                     : Order.getAvroOrders(50)
-            );
+            );  
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             if (indexer != null) {
                 try { indexer.close(); } catch (IOException ignore) {}
             }            
-            System.out.println();
         }
     }    
 }

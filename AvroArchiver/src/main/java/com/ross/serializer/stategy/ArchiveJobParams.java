@@ -2,6 +2,8 @@ package com.ross.serializer.stategy;
 
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.ross.serializer.stategy.ArchiveJobParams.Storage.FileStorage;
 
 public class ArchiveJobParams {
 	private static final Logger log = LoggerFactory.getLogger(ArchiveJobParams.class);
@@ -36,26 +39,40 @@ public class ArchiveJobParams {
     }
 
     public static ArchiveJobParams getInstance(String job) {
-        try {       
+        try {
+            if (job == null || job.isEmpty()) {
+                throw new IllegalArgumentException("job must not be null/empty");
+            }
+
+            // Case 1: job contains '.' -> explicit file (e.g. *.avro)
             if (job.contains(".")) {
                 File file = new File(job);
                 ArchiveJobParams params = new ArchiveJobParams();
                 params.getJob().setFileName(file.getName());
-                //params.getStorage().setFile(file.getParent() != null ? file.getParent() : "");
+                FileStorage fileStorage = new FileStorage();
+                fileStorage.setBaseDir(file.getParent() != null ? file.getParent() : "");
+                params.getStorage().setFile(fileStorage);         
                 return params;
-            }                   
+            }
+
+            // Case 2: job name -> load <job>.yaml from classpath
+            String resourceName = job + ".yaml";
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            String fullPath = job + ".yaml";
-            log.debug(">>>"+fullPath);
-            
-            ArchiveJobParams config = mapper.readValue(new File(fullPath), ArchiveJobParams.class);
-          
-            return config;    
+
+            try (InputStream is = Thread.currentThread()
+                                        .getContextClassLoader()
+                                        .getResourceAsStream(resourceName)) {
+                if (is == null) {
+                    throw new FileNotFoundException("Resource not found in classpath: " + resourceName);
+                }
+                log.debug("Loading job params from classpath: {}", resourceName);
+                return mapper.readValue(is, ArchiveJobParams.class);
+            }
 
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("Failed to load job params for '{}': {}", job, e.getMessage(), e);
+            return null;
         }
-        return null;
     }
 
     public ArchiveNameResolver getArchiveNameResolver() {
@@ -108,6 +125,7 @@ public class ArchiveJobParams {
             this.
             description = description;
         }
+
         public ArchiveSchedule getArchiveNamingScheme() {
             return archiveNamingScheme;
         }
@@ -219,7 +237,9 @@ public class ArchiveJobParams {
     public class ArchiveNameResolver {
 
         public String resolveAvroArchiveFileName(String baseName, ArchiveSchedule schedule) {
-            return namingResolver(baseName, schedule, ZonedDateTime.now());
+            String name = namingResolver(baseName, schedule, ZonedDateTime.now());
+            System.out.println(name);
+            return name;
         }
 
         private String namingResolver(String baseName, ArchiveSchedule schedule, ZonedDateTime dateTime) {

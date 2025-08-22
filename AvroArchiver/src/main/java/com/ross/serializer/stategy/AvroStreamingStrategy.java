@@ -15,8 +15,6 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.SeekableInput;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
@@ -85,7 +83,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
 			while (!(batch = recordSupplier.get()).isEmpty()) {
 				for (T record : batch) {
 					dataFileWriter.append(record);
-					//System.out.print("$");
+					System.out.print("$");
 
 					// Index using the plugin's internal key extractor
 					if (indexer.isPresent()) {

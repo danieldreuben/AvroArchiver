@@ -81,6 +81,7 @@ public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStream
     ) throws IOException {
         try {
             String fullPath = jobParams.getNaming();
+            System.out.println(fullPath);
             File file = new File(fullPath);
             super.write(schema, recordSupplier, file);
 

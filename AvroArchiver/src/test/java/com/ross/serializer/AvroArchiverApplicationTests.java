@@ -244,7 +244,6 @@ class AvroApplicationArchiverTests {
         }
     }
 
-
     @Test
     void testReadAllOrders()  {
         try {
@@ -273,7 +272,7 @@ class AvroApplicationArchiverTests {
                     .find(
                         OrderAvro.getClassSchema(),
                         order -> {
-                            if (order.getShipping() > 3000) {
+                            if (order.getShipping() > 4000) {
                                 System.out.print("$");
                                 return ++count[0] > 5; // stop after more than n matches
                             }
@@ -282,8 +281,8 @@ class AvroApplicationArchiverTests {
                     );
 
             match.ifPresent(order -> {
-                log.info("\nMatched shipping > 3000 - " + count[0] 
-                    + " match(es): id " + order.getOrderId());
+                log.info("\nMatched " + count[0] 
+                    +" where shipping > 4000 " + order);
             });
 
             if (match.isEmpty()) {

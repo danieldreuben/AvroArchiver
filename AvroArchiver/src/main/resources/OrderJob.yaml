@@ -11,7 +11,7 @@ indexer:
 
 storage:                                              
   file:
-    baseDir: "./"                                               
+    baseDir: "."                                               
     archiveDir: "archives"
 
   blob:
