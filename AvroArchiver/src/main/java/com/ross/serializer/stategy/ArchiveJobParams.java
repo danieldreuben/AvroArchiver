@@ -14,13 +14,13 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.ross.serializer.stategy.ArchiveJobParams.Storage.FileStorage;
 
 public class ArchiveJobParams {
 	private static final Logger log = LoggerFactory.getLogger(ArchiveJobParams.class);
     private Job job;
     private Storage storage;
     private Indexer indexer;
+    private ArchiveNameResolver nameResolver;
 
      public enum ArchiveSchedule {
         YEARLY,
@@ -29,16 +29,16 @@ public class ArchiveJobParams {
         DAILY,
         HOURLY
     }
-   
 
     public ArchiveJobParams() {
         job = new Job();
         storage = new Storage();
         storage.setFile(new Storage.FileStorage());
-
+        nameResolver = new ArchiveNameResolver();
     }
 
-    public static ArchiveJobParams getInstance(String job) {
+    public static ArchiveJobParams getInstance(String job) 
+    throws Exception {
         try {
             if (job == null || job.isEmpty()) {
                 throw new IllegalArgumentException("job must not be null/empty");
@@ -49,9 +49,7 @@ public class ArchiveJobParams {
                 File file = new File(job);
                 ArchiveJobParams params = new ArchiveJobParams();
                 params.getJob().setFileName(file.getName());
-                FileStorage fileStorage = new FileStorage();
-                fileStorage.setBaseDir(file.getParent() != null ? file.getParent() : "");
-                params.getStorage().setFile(fileStorage);         
+                params.getStorage().getFile().setBaseDir(file.getParent() != null ? file.getParent() : "");       
                 return params;
             }
 
@@ -71,20 +69,20 @@ public class ArchiveJobParams {
 
         } catch (Exception e) {
             log.error("Failed to load job params for '{}': {}", job, e.getMessage(), e);
-            return null;
+            throw e;
         }
     }
 
     public ArchiveNameResolver getArchiveNameResolver() {
-        return new ArchiveNameResolver();
+        return nameResolver;
     }
 
     public String getNaming() {
         return (job.archiveNamingScheme == null) ? 
             getJob().getFileName() :
-                new ArchiveNameResolver().
+                nameResolver.
                 resolveAvroArchiveFileName(getJob().getFileName(), getJob().archiveNamingScheme);            
-        }
+    }
 
     public Job getJob() {
         return job;
@@ -238,7 +236,6 @@ public class ArchiveJobParams {
 
         public String resolveAvroArchiveFileName(String baseName, ArchiveSchedule schedule) {
             String name = namingResolver(baseName, schedule, ZonedDateTime.now());
-            System.out.println(name);
             return name;
         }
 

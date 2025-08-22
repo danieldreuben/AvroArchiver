@@ -19,7 +19,7 @@ public class AvroBlobStorageStrategy<T extends SpecificRecord> extends AvroStrea
 
     private final BlobClient blobClient;
 
-    public AvroBlobStorageStrategy(String job) {
+    public AvroBlobStorageStrategy(String job) throws Exception {
         this.jobParams = ArchiveJobParams.getInstance(job);
         this.blobClient = new BlobClientBuilder()
                 .endpoint(jobParams.getStorage().getBlob().getEndpoint())

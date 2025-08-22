@@ -124,7 +124,7 @@ class AvroApplicationArchiverTests {
 
             new AvroFileSystemStrategy<OrderAvro>("OrderJob")
                 .readBatched(OrderAvro.getClassSchema(), (List<OrderAvro> batch) -> {
-                    batch.forEach(order -> log.debug("$")); 
+                    batch.forEach(e -> System.out.print("$"));
                     return ++batchCount[0] < 5; // Stop after n batches
                 });
             System.out.println();
@@ -181,7 +181,7 @@ class AvroApplicationArchiverTests {
     // after write of current archive then no necessary.
     // 
     //@Test
-    void testCompletedArchives() {
+    void testCompletedArchives() throws Exception {
         log.info("[begin:testCompletedArchives]");
         // Given: a mix of past and current archive files
         List<String> archives = Arrays.asList(
@@ -199,7 +199,6 @@ class AvroApplicationArchiverTests {
             "order-archive",
             ArchiveJobParams.ArchiveSchedule.WEEKLY
         );
-
 
         AvroFileSystemStrategy<OrderAvro> strategy = new AvroFileSystemStrategy<>("OrderJob");
         strategy.put("test");

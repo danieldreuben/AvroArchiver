@@ -29,7 +29,7 @@ public abstract class AvroStreamingStrategy<T extends SpecificRecord>  implement
     private Optional<IndexerPlugin<T>> indexer = Optional.empty();	
 	protected ArchiveJobParams jobParams;
 
-    public AvroStreamingStrategy(String job) {
+    public AvroStreamingStrategy(String job) throws Exception {
 		this.jobParams = ArchiveJobParams.getInstance(job);	
     } 
 
