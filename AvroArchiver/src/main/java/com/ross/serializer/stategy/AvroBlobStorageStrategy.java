@@ -15,7 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.*;
 
-public class AvroBlobStorageStrategy<T extends SpecificRecord> extends AvroStreamingStrategy<T> {
+public class AvroBlobStorageStrategy<T extends SpecificRecord> extends AvroStreamingStrategy<T> 
+implements ArchiveCommand {
 
     private final BlobClient blobClient;
 

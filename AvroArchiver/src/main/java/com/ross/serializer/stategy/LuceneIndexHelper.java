@@ -113,7 +113,7 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
         indexWriter.commit();
     }
 
-    public static class MatchResult {
+    /*public static class MatchResult {
         private final String index;
         private final String location;
 
@@ -134,7 +134,7 @@ public class LuceneIndexHelper<T> implements Closeable, IndexerPlugin<T> {
         public String toString() {
             return "MatchResult{index='" + index + "', location='" + location + "'}";
         }
-    }
+    }*/
 
     @Override
     public List<MatchResult> findLocationsForIndex(String indexPattern) throws Exception {

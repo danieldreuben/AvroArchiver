@@ -48,7 +48,7 @@ public interface IndexerPlugin<T> {
      * @return List of matching index entries
      * @throws Exception if query fails
      */
-    List<LuceneIndexHelper.MatchResult> findLocationsForIndex(String indexPattern) throws Exception;
+    List<MatchResult> findLocationsForIndex(String indexPattern) throws Exception;
 
     /**
      * Deletes index entries matching a pattern.

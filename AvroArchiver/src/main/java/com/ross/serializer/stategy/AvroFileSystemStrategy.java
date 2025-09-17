@@ -21,7 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStreamingStrategy<T> {
+public class AvroFileSystemStrategy<T extends SpecificRecord> extends AvroStreamingStrategy<T> 
+implements ArchiveCommand {
     
     private static final Logger log = LoggerFactory.getLogger(AvroFileSystemStrategy.class);
 

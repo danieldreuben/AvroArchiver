@@ -5,6 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.ross.serializer.stategy.ArchiveJobParams;
 import com.ross.serializer.stategy.AvroFileSystemStrategy;
 import com.ross.serializer.stategy.LuceneIndexHelper;
+import com.ross.serializer.stategy.MatchResult;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
@@ -217,7 +218,7 @@ class AvroApplicationArchiverTests {
             helper.indexAndCommit("myTestKey", "myTestFile.avro");
 
             // Search
-            List<LuceneIndexHelper.MatchResult> results =
+            List<MatchResult> results =
                 helper.findLocationsForIndex("myTestKey");
 
             // ✅ Assertions
@@ -232,7 +233,7 @@ class AvroApplicationArchiverTests {
             helper.deleteKeys("myTestKey*");
 
             // ✅ Assert cleanup worked
-            List<LuceneIndexHelper.MatchResult> afterDelete =
+            List<MatchResult> afterDelete =
                 helper.findLocationsForIndex("myTestKey");
 
             Assertions.assertTrue(afterDelete.isEmpty(),

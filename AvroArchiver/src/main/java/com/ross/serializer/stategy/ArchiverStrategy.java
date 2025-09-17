@@ -231,8 +231,8 @@ public interface ArchiverStrategy {
 		SeekableInput input
 	) throws IOException;
 
-	public abstract boolean put(String name);
+	/*public abstract boolean put(String name);
 	public abstract boolean get(String name);
 	public abstract List<String> getNames(String ref);	
-	public ArchiveJobParams getJobParams();
+	public ArchiveJobParams getJobParams();*/
 }

@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.stereotype.Component;
 
 import com.ross.serializer.stategy.AvroFileSystemStrategy;
-import com.ross.serializer.stategy.LuceneIndexHelper.MatchResult;
+import com.ross.serializer.stategy.MatchResult;
 import com.ross.serializer.stategy.LuceneIndexHelper;
 
 @Component
